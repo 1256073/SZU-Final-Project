@@ -1,0 +1,18 @@
+ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Command,Note
+1000,qwq,hide,hide,qwq_Default,hide,呀哈喽,shrine,piano lofi,False,"charjump(M,0.7,3,60)",尝试中ing
+1001,,,,,,接下来我们将演示剧情分支选项,,,,,
+1002,,,,,,,,,,"choice(跳转到1003|jump(1003))&choice(跳转到1006|jump(1006))&choice(跳转到新剧本2|loadscript(第二部分,1000))",
+1003,qwq,hide,hide,qwq_Angry,hide,分支1，1003,Sitting,,False,,
+1004,,,,,,合并1010,,,,,
+1005,,,,,,,,,,jump(1010),
+1006,qwq,hide,hide,qwq_Happy,hide,分支2，1006,Sitting,,False,,
+1007,,,,,,合并1010,,,,,
+1008,,,,,,,,,,jump(1010),
+1009,qwq,hide,hide,qwq_Happy,hide,分支3，1009，跳,Sitting,,False,,
+1010,qwq,hide,hide,qwq_Angry,hide,分支合并，1010,Sitting,,False,,
+1011,,,,,,,,,,,
+1012,,,,,,,,,,,
+1013,,,,,,,,,,,
+1014,,,,,,,,,,,
+1015,,,,,,,,,,,
+1016,,,,,,,,,,,
