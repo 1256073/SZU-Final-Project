@@ -45,6 +45,9 @@ namespace PacScripts
                     Debug.LogWarning("Glucose: 未找到 Pacman 玩家对象！");
                 }
             }
+
+            // 让 Solid 碰撞器忽略玩家，避免物理推挤（Trigger 不受影响，正常检测玩家）
+            IgnorePhysicsWithPlayer();
         }
 
         private void Update()
@@ -66,27 +69,20 @@ namespace PacScripts
         // ==================== 碰撞检测 ====================
 
         /// <summary>
-        /// 与玩家发生触发碰撞时，开始追踪玩家
+        /// 触发器回调：接触玩家 → 开始追踪；接触墙壁 → 销毁自己
         /// </summary>
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!isTracking && other.CompareTag("Player"))
+            if (other.CompareTag("Player"))
             {
-                isTracking = true;
-                // 若尚未缓存玩家引用，尝试从碰撞对象获取
-                if (player == null)
+                if (!isTracking)
                 {
-                    player = other.GetComponent<Pacman>();
+                    isTracking = true;
+                    if (player == null)
+                        player = other.GetComponent<Pacman>();
                 }
             }
-        }
-
-        /// <summary>
-        /// 与墙壁碰撞时直接销毁自己
-        /// </summary>
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-            if (collision.gameObject.CompareTag("Wall"))
+            else if (other.CompareTag("Wall"))
             {
                 Destroy(gameObject);
             }
@@ -121,6 +117,28 @@ namespace PacScripts
 
             // 销毁自己
             Destroy(gameObject);
+        }
+
+        // ==================== 物理隔离 ====================
+
+        /// <summary>
+        /// 让自身 Solid 碰撞器忽略玩家碰撞
+        /// 这样 Trigger 照常检测玩家，Solid 只管墙壁，不会推挤 Pacman
+        /// </summary>
+        private void IgnorePhysicsWithPlayer()
+        {
+            if (player == null) return;
+
+            Collider2D playerCol = player.GetComponent<Collider2D>();
+            if (playerCol == null) return;
+
+            foreach (var col in GetComponents<Collider2D>())
+            {
+                if (!col.isTrigger)
+                {
+                    Physics2D.IgnoreCollision(col, playerCol);
+                }
+            }
         }
     }
 }

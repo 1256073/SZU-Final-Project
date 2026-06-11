@@ -55,6 +55,9 @@ namespace PacScripts
                     Debug.LogWarning("Items: 未找到 Pacman 玩家对象！");
                 }
             }
+
+            // 让 Solid 碰撞器忽略玩家，避免物理推挤（Trigger 不受影响，正常检测玩家）
+            IgnorePhysicsWithPlayer();
         }
 
         private void Update()
@@ -76,27 +79,20 @@ namespace PacScripts
         // ==================== 碰撞检测 ====================
 
         /// <summary>
-        /// 与玩家发生触发碰撞时，开始追踪玩家
+        /// 触发器回调：接触玩家 → 开始追踪；接触墙壁 → 销毁自己
         /// </summary>
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!isTracking && other.CompareTag("Player"))
+            if (other.CompareTag("Player"))
             {
-                isTracking = true;
-                // 若尚未缓存玩家引用，尝试从碰撞对象获取
-                if (player == null)
+                if (!isTracking)
                 {
-                    player = other.GetComponent<Pacman>();
+                    isTracking = true;
+                    if (player == null)
+                        player = other.GetComponent<Pacman>();
                 }
             }
-        }
-
-        /// <summary>
-        /// 与墙壁碰撞时直接销毁自己
-        /// </summary>
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-            if (collision.gameObject.CompareTag("Wall"))
+            else if (other.CompareTag("Wall"))
             {
                 Destroy(gameObject);
             }
@@ -128,25 +124,42 @@ namespace PacScripts
                 player.AddSpeed(speedAddValue);
             }
 
-            // 效果3：清空糖分储存条
+            // 效果3：消化糖分 — 清空当前糖分，若有转换率则按比例加速
             if (clearGlucoseBar)
             {
-                player.ClearGlucose();
-            }
-
-            // 效果4：糖分转换速度 — 将当前全部糖分转换为移动速度
-            // 公式：增加速度 = currentGlucose × 糖分转换速度
-            // 转换后：digestedGlucose += currentGlucose，currentGlucose = 0
-            if (glucoseToSpeedRate > 0f && player.CurrentGlucose > 0f)
-            {
-                float convertedSpeed = player.CurrentGlucose * glucoseToSpeedRate;
-                player.AddSpeed(convertedSpeed);
-                player.AddDigestedGlucose(player.CurrentGlucose);
+                if (glucoseToSpeedRate > 0f && player.CurrentGlucose > 0f)
+                {
+                    float convertedSpeed = player.CurrentGlucose * glucoseToSpeedRate;
+                    player.AddSpeed(convertedSpeed);
+                    player.AddDigestedGlucose(player.CurrentGlucose);
+                }
                 player.ClearGlucose();
             }
 
             // 销毁自己
             Destroy(gameObject);
+        }
+
+        // ==================== 物理隔离 ====================
+
+        /// <summary>
+        /// 让自身 Solid 碰撞器忽略玩家碰撞
+        /// 这样 Trigger 照常检测玩家，Solid 只管墙壁，不会推挤 Pacman
+        /// </summary>
+        private void IgnorePhysicsWithPlayer()
+        {
+            if (player == null) return;
+
+            Collider2D playerCol = player.GetComponent<Collider2D>();
+            if (playerCol == null) return;
+
+            foreach (var col in GetComponents<Collider2D>())
+            {
+                if (!col.isTrigger)
+                {
+                    Physics2D.IgnoreCollision(col, playerCol);
+                }
+            }
         }
     }
 }

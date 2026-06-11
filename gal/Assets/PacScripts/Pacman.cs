@@ -32,6 +32,8 @@ namespace PacScripts
         public float MaxGlucose => maxGlucose;
         public float MoveSpeed => moveSpeed;
         public float DigestedGlucose => digestedGlucose;
+        /// <summary>当前移动输入方向（归一化）</summary>
+        public Vector2 MoveDirection => moveInput;
 
         // ==================== Unity 生命周期 ====================
 

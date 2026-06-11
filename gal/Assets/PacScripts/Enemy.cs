@@ -3,264 +3,223 @@ using UnityEngine;
 namespace PacScripts
 {
     /// <summary>
-    /// Enemy — 敌人 AI
-    /// 行为优先级：干扰玩家 > 紧随玩家 > 随机移动
-    /// 移动速度随游戏时间增长，与玩家碰撞时触发 GameOver
+    /// Enemy — 敌人 AI（最优版）
+    /// 三种模式：跟踪 / 骚扰 / 随机
+    /// 含速度差异、墙壁绕行、智能反弹、反聚团
     /// </summary>
     public class Enemy : MonoBehaviour
     {
-        // ==================== Inspector 参数 ====================
-
-        [Header("【引用】")]
-        /// <summary>玩家对象引用（Pacman）</summary>
-        [SerializeField] private Pacman player;
+        // ==================== Inspector ====================
 
         [Header("【行为模式】")]
-        /// <summary>是否启用随机移动模式</summary>
-        [SerializeField] private bool randomMove = false;
-        /// <summary>是否启用紧随玩家模式</summary>
-        [SerializeField] private bool followPlayer = false;
-        /// <summary>是否启用干扰玩家模式（优先级最高）</summary>
-        [SerializeField] private bool harassPlayer = false;
+        [SerializeField] private bool followPlayer  = false;
+        [SerializeField] private bool harassPlayer  = false;
+        [SerializeField] private bool randomMove    = false;
 
-        [Header("【干扰参数】")]
-        /// <summary>干扰阈值：与玩家距离小于此值时切换为随机移动</summary>
-        [SerializeField] private float harassThreshold = 3f;
+        [Header("【骚扰参数】")]
+        [SerializeField] private float harassRange   = 3f;   // 骚扰范围：进入此范围后随机移动
+        [SerializeField] private float harassOffset  = 2f;   // 拦截偏移：堵在玩家前方多远
 
-        [Header("【随机移动参数】")]
-        /// <summary>随机方向切换间隔（秒）</summary>
-        [SerializeField] private float randomDirectionInterval = 2f;
+        [Header("【随机参数】")]
+        [SerializeField] private float visionRange   = 5f;   // 视野范围：发现玩家后切换跟踪
 
-        // ==================== 内部缓存 ====================
+        [Header("【寻路参数】")]
+        [SerializeField] private LayerMask wallLayer;
+        [SerializeField] private float avoidDistance  = 1.2f; // 提前绕行距离
+        [SerializeField] private float avoidAngleStep = 25f;  // 绕行角度步长
 
-        /// <summary>PacOver 结算管理器引用</summary>
-        private PacOver pacOver;
-        /// <summary>Rigidbody2D 组件缓存</summary>
-        private Rigidbody2D rb;
-        /// <summary>当前敌人移动速度</summary>
-        private float currentSpeed;
-        /// <summary>当前随机移动方向</summary>
-        private Vector2 randomDirection;
-        /// <summary>随机方向计时器</summary>
-        private float randomTimer;
-        /// <summary>是否处于干扰模式的随机移动阶段</summary>
-        private bool isHarassRandomPhase = false;
-        /// <summary>是否已触发过 GameOver，防止重复调用</summary>
-        private bool hasTriggeredGameOver = false;
+        // ==================== 内部状态 ====================
 
-        // ==================== Unity 生命周期 ====================
+        private Pacman   player;
+        private PacOver  pacOver;
+        private Vector2  randomDir;
+        private float    speedVar;          // 个体速度差异 (0.8~1.2)
+        private Collider2D myCol;
+        private bool     harassRandPhase;
+        private bool     gameOverTriggered;
 
-        private void Awake()
-        {
-            rb = GetComponent<Rigidbody2D>();
-            if (rb == null)
-            {
-                Debug.LogError("Enemy: 未找到 Rigidbody2D 组件！请在敌人 Prefab 上添加 Rigidbody2D。");
-            }
-        }
+        // ==================== 生命周期 ====================
 
         private void Start()
         {
-            // 缓存 PacOver 引用（仅初始化阶段查找）
             pacOver = FindFirstObjectByType<PacOver>();
-            if (pacOver == null)
-            {
-                Debug.LogWarning("Enemy: 未找到 PacOver 组件！");
-            }
+            if (player == null) player = FindFirstObjectByType<Pacman>();
 
-            // 若未通过 Inspector 赋值，尝试查找玩家
-            if (player == null)
-            {
-                player = FindFirstObjectByType<Pacman>();
-                if (player == null)
-                {
-                    Debug.LogWarning("Enemy: 未找到 Pacman 玩家对象！");
-                }
-            }
+            randomDir = Random.insideUnitCircle.normalized;
+            speedVar  = Random.Range(0.8f, 1.2f);
+            myCol     = GetComponent<Collider2D>();
 
-            // 初始化随机方向
-            randomDirection = Random.insideUnitCircle.normalized;
-            randomTimer = randomDirectionInterval;
+            IgnorePickups();
         }
 
         private void Update()
         {
             if (player == null) return;
 
-            // 更新当前速度：初始速度 + 游戏已进行时间 × 速度成长值
-            UpdateSpeed();
+            // ── 速度 ──
+            float speed = ReadSpeed();
+            if (speed <= 0f) return;
 
-            // 根据行为优先级决定移动方向
-            Vector2 moveDirection = DetermineMoveDirection();
+            // ── 方向 ──
+            Vector2 dir = GetDirection();
+            if (dir == Vector2.zero) return;
+            dir = (dir + Separation() * 0.3f).normalized;
 
-            // 使用 Rigidbody2D 进行物理移动
-            if (rb != null)
+            // ── 移动 ──
+            transform.Translate(dir * speed * Time.deltaTime, Space.World);
+        }
+
+        // ==================== 速度 ====================
+
+        private float ReadSpeed()
+        {
+            var cfg = Jump2Pac.Instance;
+            if (cfg == null) return 0f;
+            float s = (cfg.EnemyInitialMoveSpeed + Time.timeSinceLevelLoad * cfg.EnemySpeedGrowth) * speedVar;
+            return s < 0f ? 0f : s;
+        }
+
+        // ==================== 碰撞 ====================
+
+        private void OnCollisionEnter2D(Collision2D c)
+        {
+            if (!gameOverTriggered && c.gameObject.CompareTag("Player"))
             {
-                rb.velocity = moveDirection * currentSpeed;
+                GameOver();
+            }
+            else if (c.gameObject.CompareTag("Wall"))
+            {
+                // 法线反射 + 微扰
+                Vector2 n = c.contacts[0].normal;
+                randomDir = (Vector2.Reflect(randomDir, n)
+                    + Random.insideUnitCircle * 0.3f).normalized;
             }
             else
             {
-                // 备用：直接修改 Transform
-                transform.position += (Vector3)(moveDirection * currentSpeed * Time.deltaTime);
+                // 糖分 / 道具 / 其他敌人 → 忽略
+                if (myCol != null)
+                    Physics2D.IgnoreCollision(myCol, c.collider, true);
             }
         }
 
-        // ==================== 碰撞检测 ====================
-
-        /// <summary>
-        /// 与玩家碰撞时触发游戏结算
-        /// </summary>
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-            if (!hasTriggeredGameOver && collision.gameObject.CompareTag("Player"))
-            {
-                TriggerGameOver();
-            }
-        }
-
-        /// <summary>
-        /// 与玩家触发碰撞时也触发游戏结算（兼容 Trigger 模式）
-        /// </summary>
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!hasTriggeredGameOver && other.CompareTag("Player"))
-            {
-                TriggerGameOver();
-            }
+            if (!gameOverTriggered && other.CompareTag("Player"))
+                GameOver();
         }
 
-        // ==================== 速度更新 ====================
+        // ==================== 方向决策 ====================
 
-        /// <summary>
-        /// 根据游戏已进行时间更新敌人移动速度
-        /// 公式：当前速度 = 敌人初始速度 + 游戏已进行时间 × 敌人速度成长值
-        /// </summary>
-        private void UpdateSpeed()
+        private Vector2 GetDirection()
         {
-            if (Jump2Pac.Instance == null) return;
-
-            float initialSpeed = Jump2Pac.Instance.EnemyInitialMoveSpeed;
-            float growth = Jump2Pac.Instance.EnemySpeedGrowth;
-            float elapsedTime = Time.timeSinceLevelLoad;
-
-            currentSpeed = initialSpeed + elapsedTime * growth;
-
-            // 速度不能为负
-            if (currentSpeed < 0f)
-            {
-                currentSpeed = 0f;
-            }
-        }
-
-        // ==================== 行为决策 ====================
-
-        /// <summary>
-        /// 根据行为优先级决定当前移动方向
-        /// 优先级：干扰玩家 > 紧随玩家 > 随机移动
-        /// </summary>
-        private Vector2 DetermineMoveDirection()
-        {
-            // 优先级1：干扰玩家
-            if (harassPlayer)
-            {
-                return DetermineHarassDirection();
-            }
-
-            // 优先级2：紧随玩家
-            if (followPlayer)
-            {
-                return DetermineFollowDirection();
-            }
-
-            // 优先级3：随机移动
-            if (randomMove)
-            {
-                return DetermineRandomDirection();
-            }
-
-            // 默认：不移动
+            if (harassPlayer) return Harass();
+            if (followPlayer) return Follow();
+            if (randomMove)   return RandomMode();
             return Vector2.zero;
         }
 
-        /// <summary>
-        /// 干扰模式方向决策：
-        /// 先追踪玩家，距离小于阈值时改为随机移动，距离再次超过阈值时恢复追踪
-        /// </summary>
-        private Vector2 DetermineHarassDirection()
-        {
-            float distance = Vector2.Distance(transform.position, player.transform.position);
+        // ── 核心 ──
 
-            if (isHarassRandomPhase)
+        private Vector2 Follow() =>
+            Chase(transform.position, player.transform.position);
+
+        private Vector2 Harass()
+        {
+            float dist = Vector2.Distance(transform.position, player.transform.position);
+
+            if (harassRandPhase)
             {
-                // 当前处于随机移动阶段
-                if (distance > harassThreshold)
-                {
-                    // 距离再次超过阈值，恢复追踪
-                    isHarassRandomPhase = false;
-                    return DetermineFollowDirection();
-                }
-                else
-                {
-                    // 继续保持随机移动
-                    return DetermineRandomDirection();
-                }
+                if (dist > harassRange) harassRandPhase = false;
+                else return randomDir;
             }
             else
             {
-                // 当前处于追踪阶段
-                if (distance < harassThreshold)
+                if (dist < harassRange)
                 {
-                    // 距离小于阈值，切换为随机移动
-                    isHarassRandomPhase = true;
-                    return DetermineRandomDirection();
-                }
-                else
-                {
-                    // 继续追踪玩家
-                    return DetermineFollowDirection();
+                    harassRandPhase = true;
+                    randomDir = Random.insideUnitCircle.normalized;
+                    return randomDir;
                 }
             }
+
+            // 堵在玩家前方
+            Vector2 pDir = player.MoveDirection;
+            if (pDir == Vector2.zero) return Follow();
+            Vector2 ahead = (Vector2)player.transform.position + pDir * harassOffset;
+            return Chase(transform.position, ahead);
         }
 
-        /// <summary>
-        /// 紧随玩家方向：指向玩家位置
-        /// </summary>
-        private Vector2 DetermineFollowDirection()
+        private Vector2 RandomMode()
         {
-            if (player == null) return Vector2.zero;
-            Vector2 direction = (player.transform.position - transform.position).normalized;
-            return direction;
+            float dist = Vector2.Distance(transform.position, player.transform.position);
+            return dist <= visionRange ? Follow() : randomDir;
         }
 
-        /// <summary>
-        /// 随机移动方向：定时切换随机方向
-        /// </summary>
-        private Vector2 DetermineRandomDirection()
+        // ── 寻路 ──
+
+        /// <summary>追踪方向，遇墙自动左右绕行</summary>
+        private Vector2 Chase(Vector2 from, Vector2 to)
         {
-            randomTimer -= Time.deltaTime;
-            if (randomTimer <= 0f)
+            Vector2 d = to - from;
+            if (d.sqrMagnitude < 0.0001f) return Vector2.zero;
+            Vector2 dir = d.normalized;
+
+            if (wallLayer == 0) return dir;
+
+            float r = 0.3f;
+            if (!Physics2D.CircleCast(from, r, dir, avoidDistance, wallLayer))
+                return dir;
+
+            float a = avoidAngleStep;
+            while (a <= 90f)
             {
-                // 生成新的随机方向
-                randomDirection = Random.insideUnitCircle.normalized;
-                randomTimer = randomDirectionInterval;
+                Vector2 cw  = Quaternion.Euler(0, 0,  a) * dir;
+                if (!Physics2D.CircleCast(from, r, cw, avoidDistance, wallLayer)) return cw;
+                Vector2 ccw = Quaternion.Euler(0, 0, -a) * dir;
+                if (!Physics2D.CircleCast(from, r, ccw, avoidDistance, wallLayer)) return ccw;
+                a += avoidAngleStep;
             }
-            return randomDirection;
+            return dir;
         }
 
-        // ==================== 游戏结算触发 ====================
+        // ── 辅助 ──
 
-        /// <summary>
-        /// 触发游戏结算，确保每个敌人只触发一次
-        /// </summary>
-        private void TriggerGameOver()
+        /// <summary>与其他敌人保持距离</summary>
+        private Vector2 Separation()
         {
-            if (hasTriggeredGameOver) return;
-            hasTriggeredGameOver = true;
+            Vector2 push = Vector2.zero;
+            const float radius = 0.8f;
+            var nearby = Physics2D.OverlapCircleAll(transform.position, radius, 1 << gameObject.layer);
+            foreach (var c in nearby)
+            {
+                if (c == myCol || c.gameObject == gameObject) continue;
+                Vector2 away = transform.position - c.transform.position;
+                float d = away.magnitude;
+                if (d > 0.01f) push += away.normalized * (radius - d) / radius;
+            }
+            return push;
+        }
 
+        private void IgnorePickups()
+        {
+            if (myCol == null) return;
+            foreach (var g in FindObjectsByType<Glucose>(FindObjectsSortMode.None))
+                foreach (var c in g.GetComponents<Collider2D>())
+                    Physics2D.IgnoreCollision(myCol, c);
+            foreach (var it in FindObjectsByType<Items>(FindObjectsSortMode.None))
+                foreach (var c in it.GetComponents<Collider2D>())
+                    Physics2D.IgnoreCollision(myCol, c);
+        }
+
+        // ==================== 结算 ====================
+
+        private void GameOver()
+        {
+            if (gameOverTriggered) return;
+            gameOverTriggered = true;
             if (pacOver != null && !pacOver.IsGameOver)
-            {
                 pacOver.GameOver();
-            }
         }
     }
 }
+

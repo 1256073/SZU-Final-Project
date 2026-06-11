@@ -122,7 +122,7 @@ namespace PacScripts
         // ==================== 敌人顺序生成 ====================
 
         /// <summary>
-        /// 在 (0, 0) 按敌人 Prefab 列表顺序逐一生成敌人，
+        /// 延迟 enemySpawnInterval 秒后，在 (0, 0) 按列表顺序逐一生成敌人，
         /// 每次生成间隔 enemySpawnInterval 秒，避免敌人重叠
         /// </summary>
         private IEnumerator SpawnEnemiesSequentially()
@@ -136,6 +136,9 @@ namespace PacScripts
                 Debug.LogWarning("IniPac: 敌人 Prefab 列表为空，不生成敌人。");
                 yield break;
             }
+
+            // 等待首个生成间隔，给玩家缓冲时间
+            yield return new WaitForSeconds(interval);
 
             for (int i = 0; i < enemyPrefabs.Length; i++)
             {
