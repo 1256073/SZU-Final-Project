@@ -23,6 +23,16 @@ namespace PacScripts
         /// <summary>糖分储存 Slider</summary>
         [SerializeField] private Slider glucoseSlider;
 
+        [Header("【摄像机控制】")]
+        /// <summary>放大/跟随 触发按钮</summary>
+        [SerializeField] private Button cameraZoomButton;
+        /// <summary>目标摄像机（不填自动取 Camera.main）</summary>
+        [SerializeField] private Camera targetCamera;
+        /// <summary>放大后的正交尺寸（越小越近）</summary>
+        [SerializeField] private float zoomedOrthoSize = 3f;
+        /// <summary>缩放过渡用时（秒）</summary>
+        [SerializeField] private float zoomDuration = 0.5f;
+
         // ==================== 内部缓存 ====================
 
         /// <summary>Pacman 玩家引用缓存</summary>
@@ -31,6 +41,17 @@ namespace PacScripts
         private PacOver pacOver;
         /// <summary>Jump2Pac 配置引用缓存</summary>
         private Jump2Pac config;
+
+        /// <summary>是否处于放大跟随模式</summary>
+        private bool isZoomedIn = false;
+        /// <summary>缩放计时器（秒）</summary>
+        private float zoomTimer;
+        /// <summary>缩放起始正交尺寸</summary>
+        private float zoomStartSize;
+        /// <summary>默认正交尺寸（用于还原）</summary>
+        private float defaultOrthoSize;
+        /// <summary>摄像机 z 轴偏移（保持 2D 纵深不变）</summary>
+        private float cameraZOffset;
 
         // ==================== Unity 生命周期 ====================
 
@@ -44,11 +65,50 @@ namespace PacScripts
             if (pacman == null) Debug.LogWarning("PacUI: 未找到 Pacman 组件！");
             if (pacOver == null) Debug.LogWarning("PacUI: 未找到 PacOver 组件！");
             if (config == null) Debug.LogWarning("PacUI: Jump2Pac.Instance 为空！");
+
+            // 摄像机初始化
+            if (targetCamera == null)
+                targetCamera = Camera.main;
+            if (targetCamera != null)
+            {
+                defaultOrthoSize = targetCamera.orthographicSize;
+                cameraZOffset = targetCamera.transform.position.z;
+            }
+            else
+            {
+                Debug.LogWarning("PacUI: 未找到摄像机！");
+            }
+
+            // 绑定摄像机按钮点击事件
+            if (cameraZoomButton != null)
+                cameraZoomButton.onClick.AddListener(ToggleCameraZoom);
         }
 
         private void Update()
         {
             RefreshUI();
+        }
+
+        private void LateUpdate()
+        {
+            if (targetCamera == null || pacman == null) return;
+
+            // 更新缩放计时器
+            if (zoomTimer < zoomDuration)
+                zoomTimer += Time.deltaTime;
+
+            // 计算缩放进度（SmoothStep 缓动）
+            float t = Mathf.Clamp01(zoomTimer / zoomDuration);
+            float targetSize = isZoomedIn ? zoomedOrthoSize : defaultOrthoSize;
+            targetCamera.orthographicSize = Mathf.Lerp(zoomStartSize, targetSize, Mathf.SmoothStep(0f, 1f, t));
+
+            // 放大模式下紧跟玩家
+            if (isZoomedIn)
+            {
+                Vector3 targetPos = pacman.transform.position;
+                targetPos.z = cameraZOffset;
+                targetCamera.transform.position = targetPos;
+            }
         }
 
         // ==================== UI 刷新 ====================
@@ -125,6 +185,21 @@ namespace PacScripts
             if (digestedGlucoseText == null || pacman == null) return;
 
             digestedGlucoseText.text = "消化糖分：" + Mathf.FloorToInt(pacman.DigestedGlucose).ToString();
+        }
+
+        // ==================== 摄像机控制 ====================
+
+        /// <summary>
+        /// 切换摄像机放大跟随模式
+        /// 点击按钮时触发，重置缩放计时器并记录当前正交尺寸作为起点
+        /// </summary>
+        public void ToggleCameraZoom()
+        {
+            if (targetCamera == null) return;
+
+            isZoomedIn = !isZoomedIn;
+            zoomTimer = 0f;
+            zoomStartSize = targetCamera.orthographicSize;
         }
     }
 }
