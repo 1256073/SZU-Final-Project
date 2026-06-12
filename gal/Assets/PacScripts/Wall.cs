@@ -4,87 +4,65 @@ namespace PacScripts
 {
     /// <summary>
     /// Wall — 移动墙壁
-    /// 从初始位置出发，按周期循环往返运动
-    /// 水平移动与竖直移动可独立勾选
+    /// 以初始位置为中心，在 ±range 范围内循环往复移动
     /// </summary>
     public class Wall : MonoBehaviour
     {
-        // ==================== Inspector 参数 ====================
+        // ==================== Inspector ====================
 
         [Header("【移动开关】")]
-        /// <summary>是否启用水平移动</summary>
         [SerializeField] private bool horizontalMove = true;
-        /// <summary>是否启用竖直移动</summary>
-        [SerializeField] private bool verticalMove = false;
+        [SerializeField] private bool verticalMove   = false;
 
-        // ==================== 内部缓存 ====================
+        [Header("【行为】")]
+        [SerializeField] private bool reverse = false;
 
-        /// <summary>初始位置，用于记录出发点</summary>
-        private Vector2 initialPosition;
-        /// <summary>当前水平移动方向（1 或 -1）</summary>
-        private int horizontalDirection = 1;
-        /// <summary>当前竖直移动方向（1 或 -1）</summary>
-        private int verticalDirection = 1;
-        /// <summary>周期计时器</summary>
-        private float cycleTimer;
-        /// <summary>墙壁移动周期（从 Jump2Pac 读取）</summary>
-        private float moveCycle;
-        /// <summary>墙壁横向移动速度（从 Jump2Pac 读取）</summary>
-        private float horizontalSpeed;
-        /// <summary>墙壁竖向移动速度（从 Jump2Pac 读取）</summary>
-        private float verticalSpeed;
+        // ==================== 内部状态 ====================
 
-        // ==================== Unity 生命周期 ====================
+        private Vector2 startPos;
+        private float   cycleTimer;
+        private float   moveCycle;
+        private float   horizontalRange;
+        private float   verticalRange;
+
+        // ==================== 生命周期 ====================
 
         private void Start()
         {
-            // 记录初始位置
-            initialPosition = transform.position;
+            startPos = transform.position;
 
-            // 从 Jump2Pac 读取配置
-            if (Jump2Pac.Instance != null)
+            var cfg = Jump2Pac.Instance;
+            if (cfg != null)
             {
-                moveCycle = Jump2Pac.Instance.WallMoveCycle;
-                horizontalSpeed = Jump2Pac.Instance.WallHorizontalSpeed;
-                verticalSpeed = Jump2Pac.Instance.WallVerticalSpeed;
+                moveCycle        = cfg.WallMoveCycle;
+                horizontalRange  = cfg.WallHorizontalRange;
+                verticalRange    = cfg.WallVerticalRange;
             }
             else
             {
-                Debug.LogError("Wall: Jump2Pac.Instance 为空！使用默认值。");
-                moveCycle = 3f;
-                horizontalSpeed = 2f;
-                verticalSpeed = 2f;
+                Debug.LogWarning("Wall: Jump2Pac.Instance 为空，使用默认值。");
+                moveCycle        = 3f;
+                horizontalRange  = 2f;
+                verticalRange    = 2f;
             }
         }
 
         private void Update()
         {
-            // 更新周期计时器
             cycleTimer += Time.deltaTime;
 
-            // 检查是否到达周期终点，切换方向
-            if (cycleTimer >= moveCycle)
-            {
-                cycleTimer = 0f;
-                horizontalDirection *= -1;
-                verticalDirection *= -1;
-            }
+            // 归一化时间 0~1，一个完整周期
+            float t = (cycleTimer % moveCycle) / moveCycle;
+            if (reverse) t = 1f - t;
 
-            // 计算本帧移动量
-            Vector2 movement = Vector2.zero;
+            // 正弦波：从 -range 平滑运动到 +range
+            float phase = t * Mathf.PI * 2f;
 
-            if (horizontalMove)
-            {
-                movement.x = horizontalDirection * horizontalSpeed * Time.deltaTime;
-            }
+            Vector3 pos = startPos;
+            if (horizontalMove) pos.x += Mathf.Sin(phase) * horizontalRange;
+            if (verticalMove)   pos.y += Mathf.Sin(phase) * verticalRange;
 
-            if (verticalMove)
-            {
-                movement.y = verticalDirection * verticalSpeed * Time.deltaTime;
-            }
-
-            // 应用移动
-            transform.position += (Vector3)movement;
+            transform.position = pos;
         }
     }
 }

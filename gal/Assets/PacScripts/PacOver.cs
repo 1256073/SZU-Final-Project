@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using UnityEngine.SceneManagement;
 
 namespace PacScripts
@@ -16,28 +17,23 @@ namespace PacScripts
         /// <summary>结算界面 Canvas</summary>
         [SerializeField] private Canvas settlementCanvas;
         /// <summary>坚持时长显示文本</summary>
-        [SerializeField] private Text surviveTimeText;
+        [SerializeField] private TMP_Text surviveTimeText;
         /// <summary>增益倍数显示文本</summary>
-        [SerializeField] private Text gainMultiplierText;
+        [SerializeField] private TMP_Text gainMultiplierText;
         /// <summary>最终分数显示文本</summary>
-        [SerializeField] private Text finalScoreText;
+        [SerializeField] private TMP_Text finalScoreText;
 
         [Header("【重开按钮】")]
-        /// <summary>重开按钮（可为空）</summary>
         [SerializeField] private Button restartButton;
 
         // ==================== 内部状态 ====================
 
-        /// <summary>游戏已进行时间（秒）</summary>
         private float elapsedTime = 0f;
-        /// <summary>游戏是否已结束</summary>
         private bool isGameOver = false;
-        /// <summary>剩余时间（秒）</summary>
         private float remainingTime;
-        /// <summary>Pacman 玩家引用缓存</summary>
         private Pacman pacman;
-        /// <summary>Jump2Pac 配置引用缓存</summary>
         private Jump2Pac config;
+        private TMP_Text restartLabel;
 
         // ==================== 公共属性 ====================
 
@@ -92,6 +88,7 @@ namespace PacScripts
             if (restartButton != null)
             {
                 restartButton.onClick.AddListener(RestartGame);
+                restartLabel = restartButton.GetComponentInChildren<TMP_Text>();
             }
         }
 
@@ -156,16 +153,12 @@ namespace PacScripts
         }
 
         /// <summary>
-        /// 重新开始游戏
-        /// 流程：恢复时间流速 → 重新加载当前场景
-        /// 场景重载后所有运行时数据自动恢复为初始状态
+        /// 重新开始游戏：显示加载中 → 恢复时间 → 重载场景
         /// </summary>
         public void RestartGame()
         {
-            // 恢复时间流速，避免新场景仍处于暂停状态
+            if (restartLabel != null) restartLabel.text = "加载中...";
             Time.timeScale = 1f;
-
-            // 重新加载当前 Pacman 场景
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
@@ -181,7 +174,7 @@ namespace PacScripts
         {
             float surviveDuration = elapsedTime;
             float digestedGlucose = pacman != null ? pacman.DigestedGlucose : 0f;
-            float gainMultiplier = digestedGlucose / 10f;
+            float gainMultiplier = digestedGlucose / 100f;
             float finalScore = surviveDuration * gainMultiplier;
 
             // 显示坚持时长

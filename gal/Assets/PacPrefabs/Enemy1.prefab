@@ -174,11 +174,11 @@ MonoBehaviour:
   followPlayer: 1
   harassPlayer: 0
   randomMove: 0
-  harassRange: 3
-  harassOffset: 2
-  visionRange: 5
+  harassRange: 5
+  harassOffset: 5
+  visionRange: 10
   wallLayer:
     serializedVersion: 2
     m_Bits: 128
-  avoidDistance: 1.2
-  avoidAngleStep: 25
+  avoidDistance: 2.5
+  avoidAngleStep: 30

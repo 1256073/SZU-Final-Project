@@ -24,6 +24,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Jump2Pac Sample.unity
     guid: b5117891db546064fb134dce3b58c860
   - enabled: 1
+    path: Assets/Scenes/PacTutorial.unity
+    guid: b5ca65dd0147e9b4ca4337a6fe598e71
+  - enabled: 1
     path: Assets/Scenes/Pacman.unity
     guid: 846a2d07392afdc4f8ba9348e5fa5f9f
   m_configObjects:

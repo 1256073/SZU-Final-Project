@@ -157,7 +157,7 @@ namespace PacScripts
 
         // ── 寻路 ──
 
-        /// <summary>追踪方向，遇墙自动左右绕行</summary>
+        /// <summary>追踪方向，遇墙自动左右绕行；全堵死则随机走</summary>
         private Vector2 Chase(Vector2 from, Vector2 to)
         {
             Vector2 d = to - from;
@@ -166,20 +166,26 @@ namespace PacScripts
 
             if (wallLayer == 0) return dir;
 
-            float r = 0.3f;
-            if (!Physics2D.CircleCast(from, r, dir, avoidDistance, wallLayer))
+            // 起点前移，避免贴墙时自身碰撞体重叠导致漏检
+            Vector2 origin = from + dir * 0.25f;
+            float r = 0.35f;
+
+            if (!Physics2D.CircleCast(origin, r, dir, avoidDistance, wallLayer))
                 return dir;
 
             float a = avoidAngleStep;
-            while (a <= 90f)
+            while (a <= 180f)
             {
                 Vector2 cw  = Quaternion.Euler(0, 0,  a) * dir;
-                if (!Physics2D.CircleCast(from, r, cw, avoidDistance, wallLayer)) return cw;
+                if (!Physics2D.CircleCast(origin, r, cw, avoidDistance, wallLayer)) return cw;
                 Vector2 ccw = Quaternion.Euler(0, 0, -a) * dir;
-                if (!Physics2D.CircleCast(from, r, ccw, avoidDistance, wallLayer)) return ccw;
+                if (!Physics2D.CircleCast(origin, r, ccw, avoidDistance, wallLayer)) return ccw;
                 a += avoidAngleStep;
             }
-            return dir;
+
+            // 全堵住了，随机走也比撞墙好
+            randomDir = Random.insideUnitCircle.normalized;
+            return randomDir;
         }
 
         // ── 辅助 ──

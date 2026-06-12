@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace PacScripts
 {
@@ -12,12 +13,11 @@ namespace PacScripts
         // ==================== Inspector 参数 ====================
 
         [Header("【UI 文本引用】")]
-        /// <summary>剩余时间显示文本</summary>
-        [SerializeField] private Text remainingTimeText;
-        /// <summary>糖分储存条文本（格式：当前/最大）</summary>
-        [SerializeField] private Text glucoseBarText;
-        /// <summary>消化糖分显示文本</summary>
-        [SerializeField] private Text digestedGlucoseText;
+        [SerializeField] private TMP_Text remainingTimeText;
+        [SerializeField] private TMP_Text glucoseBarText;
+        [SerializeField] private TMP_Text digestedGlucoseText;
+        [SerializeField] private TMP_Text playerSpeedText;
+        [SerializeField] private TMP_Text enemySpeedText;
 
         [Header("【UI Slider 引用】")]
         /// <summary>糖分储存 Slider</summary>
@@ -50,8 +50,9 @@ namespace PacScripts
         private float zoomStartSize;
         /// <summary>默认正交尺寸（用于还原）</summary>
         private float defaultOrthoSize;
-        /// <summary>摄像机 z 轴偏移（保持 2D 纵深不变）</summary>
+        private Vector3 defaultCameraPos;
         private float cameraZOffset;
+        private TMP_Text zoomButtonLabel;
 
         // ==================== Unity 生命周期 ====================
 
@@ -72,16 +73,20 @@ namespace PacScripts
             if (targetCamera != null)
             {
                 defaultOrthoSize = targetCamera.orthographicSize;
-                cameraZOffset = targetCamera.transform.position.z;
+                defaultCameraPos = targetCamera.transform.position;
+                cameraZOffset    = defaultCameraPos.z;
             }
             else
             {
                 Debug.LogWarning("PacUI: 未找到摄像机！");
             }
 
-            // 绑定摄像机按钮点击事件
+            // 绑定摄像机按钮 + 缓存文字
             if (cameraZoomButton != null)
+            {
                 cameraZoomButton.onClick.AddListener(ToggleCameraZoom);
+                zoomButtonLabel = cameraZoomButton.GetComponentInChildren<TMP_Text>();
+            }
         }
 
         private void Update()
@@ -93,22 +98,28 @@ namespace PacScripts
         {
             if (targetCamera == null || pacman == null) return;
 
-            // 更新缩放计时器
             if (zoomTimer < zoomDuration)
                 zoomTimer += Time.deltaTime;
 
-            // 计算缩放进度（SmoothStep 缓动）
             float t = Mathf.Clamp01(zoomTimer / zoomDuration);
-            float targetSize = isZoomedIn ? zoomedOrthoSize : defaultOrthoSize;
-            targetCamera.orthographicSize = Mathf.Lerp(zoomStartSize, targetSize, Mathf.SmoothStep(0f, 1f, t));
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
 
-            // 放大模式下紧跟玩家
+            // 缩放
+            float targetSize = isZoomedIn ? zoomedOrthoSize : defaultOrthoSize;
+            targetCamera.orthographicSize = Mathf.Lerp(zoomStartSize, targetSize, smoothT);
+
+            // 位置
+            Vector3 targetPos;
             if (isZoomedIn)
             {
-                Vector3 targetPos = pacman.transform.position;
+                targetPos = pacman.transform.position;
                 targetPos.z = cameraZOffset;
-                targetCamera.transform.position = targetPos;
             }
+            else
+            {
+                targetPos = defaultCameraPos;
+            }
+            targetCamera.transform.position = Vector3.Lerp(targetCamera.transform.position, targetPos, smoothT);
         }
 
         // ==================== UI 刷新 ====================
@@ -119,20 +130,15 @@ namespace PacScripts
         /// </summary>
         private void RefreshUI()
         {
-            // 刷新剩余时间
             RefreshRemainingTime();
-
-            // 刷新糖分储存条
             RefreshGlucoseBar();
-
-            // 刷新消化糖分
             RefreshDigestedGlucose();
+            RefreshPlayerSpeed();
+            RefreshEnemySpeed();
         }
 
         /// <summary>
-        /// 刷新剩余时间显示
-        /// 普通模式：显示剩余秒数
-        /// 无限模式：显示 ∞
+        /// 刷新剩余时间：格式 剩余\n时间\n数值
         /// </summary>
         private void RefreshRemainingTime()
         {
@@ -140,20 +146,18 @@ namespace PacScripts
 
             if (config != null && config.UnlimitedMode)
             {
-                remainingTimeText.text = "剩余时间：∞";
+                remainingTimeText.text = "剩余\n时间\n∞";
             }
             else if (pacOver != null)
             {
                 float remaining = pacOver.RemainingTime;
                 if (remaining < 0f) remaining = 0f;
-                remainingTimeText.text = "剩余时间：" + Mathf.CeilToInt(remaining).ToString();
+                remainingTimeText.text = "剩余\n时间\n" + Mathf.CeilToInt(remaining);
             }
         }
 
         /// <summary>
-        /// 刷新糖分储存条文本与 Slider
-        /// 文本格式：当前糖分/最大糖分（如 50/100）
-        /// Slider 值：当前糖分 ÷ 最大糖分
+        /// 刷新糖分储存条：格式 当前/最大
         /// </summary>
         private void RefreshGlucoseBar()
         {
@@ -162,13 +166,9 @@ namespace PacScripts
             float current = pacman.CurrentGlucose;
             float max = pacman.MaxGlucose;
 
-            // 更新文本
             if (glucoseBarText != null)
-            {
                 glucoseBarText.text = Mathf.FloorToInt(current) + "/" + Mathf.FloorToInt(max);
-            }
 
-            // 更新 Slider
             if (glucoseSlider != null)
             {
                 glucoseSlider.maxValue = max;
@@ -177,14 +177,30 @@ namespace PacScripts
         }
 
         /// <summary>
-        /// 刷新消化糖分文本显示
-        /// 格式：消化糖分：xxx
+        /// 刷新消化糖分：格式 消化\n糖分\n数值
         /// </summary>
         private void RefreshDigestedGlucose()
         {
             if (digestedGlucoseText == null || pacman == null) return;
+            digestedGlucoseText.text = "消化\n糖分\n" + Mathf.FloorToInt(pacman.DigestedGlucose);
+        }
 
-            digestedGlucoseText.text = "消化糖分：" + Mathf.FloorToInt(pacman.DigestedGlucose).ToString();
+        /// <summary>
+        /// 刷新玩家速度：格式 玩家\n速度\n数值
+        /// </summary>
+        private void RefreshPlayerSpeed()
+        {
+            if (playerSpeedText == null || pacman == null) return;
+            playerSpeedText.text = "玩家\n速度\n" + pacman.MoveSpeed.ToString("F1");
+        }
+
+        /// <summary>
+        /// 刷新敌人速度：格式 敌人\n速度\n数值（从 Jump2Pac 读取）</summary>
+        private void RefreshEnemySpeed()
+        {
+            if (enemySpeedText == null || config == null) return;
+            float spd = config.EnemyInitialMoveSpeed + Time.timeSinceLevelLoad * config.EnemySpeedGrowth;
+            enemySpeedText.text = "敌人\n速度\n" + spd.ToString("F1");
         }
 
         // ==================== 摄像机控制 ====================
@@ -200,6 +216,9 @@ namespace PacScripts
             isZoomedIn = !isZoomedIn;
             zoomTimer = 0f;
             zoomStartSize = targetCamera.orthographicSize;
+
+            if (zoomButtonLabel != null)
+                zoomButtonLabel.text = isZoomedIn ? "恢复视角" : "放大视角";
         }
     }
 }

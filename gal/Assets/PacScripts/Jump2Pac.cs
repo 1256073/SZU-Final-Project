@@ -21,6 +21,8 @@ namespace PacScripts
         [Header("【场景跳转】")]
         /// <summary>用于触发进入 Pacman 场景的 UI 按钮</summary>
         [SerializeField] private Button startButton;
+        /// <summary>教学模式场景名称</summary>
+        [SerializeField] private string tutorialSceneName = "Tutorial";
         /// <summary>Pacman 场景名称</summary>
         [SerializeField] private string pacmanSceneName = "Pacman";
 
@@ -51,10 +53,10 @@ namespace PacScripts
         [Header("【墙壁配置】")]
         /// <summary>墙壁移动周期（秒）</summary>
         [SerializeField] private float wallMoveCycle = 3f;
-        /// <summary>墙壁横向移动速度</summary>
-        [SerializeField] private float wallHorizontalSpeed = 2f;
-        /// <summary>墙壁竖向移动速度</summary>
-        [SerializeField] private float wallVerticalSpeed = 2f;
+        /// <summary>墙壁横向移动范围</summary>
+        [SerializeField] private float wallHorizontalRange = 2f;
+        /// <summary>墙壁竖向移动范围</summary>
+        [SerializeField] private float wallVerticalRange = 2f;
 
         // ==================== 公共属性（只读，供其它脚本读取配置） ====================
 
@@ -68,8 +70,8 @@ namespace PacScripts
         public GameObject[] EnemyPrefabs => enemyPrefabs;
         public float EnemySpawnInterval => enemySpawnInterval;
         public float WallMoveCycle => wallMoveCycle;
-        public float WallHorizontalSpeed => wallHorizontalSpeed;
-        public float WallVerticalSpeed => wallVerticalSpeed;
+        public float WallHorizontalRange => wallHorizontalRange;
+        public float WallVerticalRange => wallVerticalRange;
 
         // ==================== Unity 生命周期 ====================
 
@@ -106,13 +108,13 @@ namespace PacScripts
         // ==================== 场景跳转 ====================
 
         /// <summary>
-        /// 点击按钮后加载 Pacman 场景
-        /// 加载前确保 Time.timeScale = 1，避免从其它场景继承暂停状态
+        /// 点击按钮后加载场景：教学模式 → 教学场景，否则 → 游戏场景
         /// </summary>
         private void OnStartButtonClicked()
         {
             Time.timeScale = 1f;
-            SceneManager.LoadScene(pacmanSceneName);
+            string target = teachingMode ? tutorialSceneName : pacmanSceneName;
+            SceneManager.LoadScene(target);
         }
     }
 }

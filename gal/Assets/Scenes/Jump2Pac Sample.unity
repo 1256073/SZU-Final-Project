@@ -229,10 +229,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startButton: {fileID: 1163942355}
+  tutorialSceneName: PacTutorial
   pacmanSceneName: Pacman
   teachingMode: 0
   unlimitedMode: 0
-  gameTimeLimit: 60
+  gameTimeLimit: 120
   playerInitialMoveSpeed: 5
   playerMaxGlucose: 100
   enemyInitialMoveSpeed: 2
@@ -243,8 +244,8 @@ MonoBehaviour:
   - {fileID: 1273746299068102033, guid: 67b0a630446877e4f94dbb9f1ec22b30, type: 3}
   enemySpawnInterval: 3
   wallMoveCycle: 3
-  wallHorizontalSpeed: 2
-  wallVerticalSpeed: 2
+  wallHorizontalRange: 3
+  wallVerticalRange: 3
 --- !u!114 &75988708
 MonoBehaviour:
   m_ObjectHideFlags: 0
