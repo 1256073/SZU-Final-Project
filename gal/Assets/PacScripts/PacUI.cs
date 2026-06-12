@@ -22,6 +22,12 @@ namespace PacScripts
         [Header("【UI Slider 引用】")]
         /// <summary>糖分储存 Slider</summary>
         [SerializeField] private Slider glucoseSlider;
+        /// <summary>糖分 Slider 填充图片（运行时自动从 fillRect 获取）</summary>
+        private Image glucoseSliderFill;
+        /// <summary>糖分未满时的填充颜色</summary>
+        [SerializeField] private Color glucoseNormalColor = Color.white;
+        /// <summary>糖分满时的填充颜色</summary>
+        [SerializeField] private Color glucoseFullColor = Color.red;
 
         [Header("【摄像机控制】")]
         /// <summary>放大/跟随 触发按钮</summary>
@@ -79,6 +85,12 @@ namespace PacScripts
             else
             {
                 Debug.LogWarning("PacUI: 未找到摄像机！");
+            }
+
+            // 缓存糖分 Slider 填充图片
+            if (glucoseSlider != null && glucoseSlider.fillRect != null)
+            {
+                glucoseSliderFill = glucoseSlider.fillRect.GetComponent<Image>();
             }
 
             // 绑定摄像机按钮 + 缓存文字
@@ -173,6 +185,12 @@ namespace PacScripts
             {
                 glucoseSlider.maxValue = max;
                 glucoseSlider.value = current;
+
+                // 糖分满时填充色变红
+                if (glucoseSliderFill != null)
+                {
+                    glucoseSliderFill.color = current >= max ? glucoseFullColor : glucoseNormalColor;
+                }
             }
         }
 
