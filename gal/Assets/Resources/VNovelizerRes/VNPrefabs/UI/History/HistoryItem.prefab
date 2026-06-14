@@ -45,6 +45,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8950179709080629978}
     m_Modifications:
+    - target: {fileID: 946352581331432442, guid: b9b6f470bcd83fd48bac16fec12534f8, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 67c78143682edd146899eeec34bd51a8, type: 3}
     - target: {fileID: 3199188849321253917, guid: b9b6f470bcd83fd48bac16fec12534f8, type: 3}
       propertyPath: m_Name
       value: H_SpeakerBox
