@@ -37,7 +37,7 @@ MonoBehaviour:
   CG_DataPath: VNovelizerRes/GalleryContent/CG
   Music_DataPath: VNovelizerRes/GalleryContent/Music
   Scene_DataPath: VNovelizerRes/GalleryContent/Scene
-  DefaultSpeakerBoxSprite: {fileID: 0}
+  DefaultSpeakerBoxSprite: {fileID: 21300000, guid: 162f31b1f1c20b641a745847b4a39f53, type: 3}
   DefaultHeadFrameSprite: {fileID: 0}
   SoundObjPath: VNovelizerRes/VNPrefabs/Gameplay/SoundObj
   VideoObjPath: VNovelizerRes/VNPrefabs/Gameplay/VideoObj
