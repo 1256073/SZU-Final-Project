@@ -53,8 +53,8 @@ namespace PacScripts
         [Header("【道具配置】")]
         /// <summary>道具 Prefab 列表，随机从中选取生成</summary>
         [SerializeField] private GameObject[] itemPrefabs;
-        /// <summary>道具生成概率（每秒概率，0~1）</summary>
-        [SerializeField] private float itemSpawnProbability = 0.3f;
+        /// <summary>道具生成间隔（秒/个）</summary>
+        [SerializeField] private float itemSpawnInterval = 3f;
 
         [Header("【墙壁配置】")]
         /// <summary>墙壁移动周期（秒）</summary>
@@ -76,7 +76,7 @@ namespace PacScripts
         public GameObject[] EnemyPrefabs => enemyPrefabs;
         public float EnemySpawnInterval => enemySpawnInterval;
         public GameObject[] ItemPrefabs => itemPrefabs;
-        public float ItemSpawnProbability => itemSpawnProbability;
+        public float ItemSpawnInterval => itemSpawnInterval;
         public float WallMoveCycle => wallMoveCycle;
         public float WallHorizontalRange => wallHorizontalRange;
         public float WallVerticalRange => wallVerticalRange;

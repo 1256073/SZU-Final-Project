@@ -27,6 +27,17 @@ namespace PacScripts
         /// <summary>糖分 Prefab</summary>
         [SerializeField] private GameObject glucosePrefab;
 
+        [Header("【BGM】")]
+        /// <summary>BGM 曲目</summary>
+        [SerializeField] private AudioClip bgmClip;
+        /// <summary>结算界面时 BGM 音量倍数（0~1）</summary>
+        [SerializeField] private float bgmLowVolumeMultiplier = 0.5f;
+
+        [Header("【结算音效】")]
+        /// <summary>成功音效</summary>
+        [SerializeField] private AudioClip successSound;
+        /// <summary>失败音效</summary>
+        [SerializeField] private AudioClip failureSound;
 
 
         // ==================== 内部缓存 ====================
@@ -39,6 +50,14 @@ namespace PacScripts
         private Coroutine itemSpawnCoroutine;
         /// <summary>墙体层遮罩，用于避免生成到墙体内部</summary>
         private int wallLayerMask;
+
+        /// <summary>BGM 播放器（静态，跨场景重载保持播放位置）</summary>
+        private static AudioSource bgmAudioSource;
+        /// <summary>结算界面音量倍数缓存（静态，供静态方法读取）</summary>
+        private static float s_bgmLowMultiplier = 0.5f;
+        /// <summary>成功/失败音效缓存（静态，供静态方法播放）</summary>
+        private static AudioClip s_successSound;
+        private static AudioClip s_failureSound;
 
         // ==================== Unity 生命周期 ====================
 
@@ -74,6 +93,9 @@ namespace PacScripts
 
             // 5. 启动运行时道具生成协程
             itemSpawnCoroutine = StartCoroutine(SpawnItemsRoutine());
+
+            // 6. 播放 BGM（如已存在则恢复播放，不会从头开始）
+            PlayBGM();
         }
 
         private void OnDestroy()
@@ -89,6 +111,8 @@ namespace PacScripts
                 StopCoroutine(itemSpawnCoroutine);
                 itemSpawnCoroutine = null;
             }
+
+
         }
 
         // ==================== 初始糖分生成 ====================
@@ -195,14 +219,14 @@ namespace PacScripts
         // ==================== 运行时道具生成 ====================
 
         /// <summary>
-        /// 按照每秒概率随机生成道具
+        /// 按照道具生成间隔（秒/个）持续随机生成道具
         /// 随机位置必须在场景范围内，且不得生成到墙体内部
         /// </summary>
         private IEnumerator SpawnItemsRoutine()
         {
             Jump2Pac config = Jump2Pac.Instance;
             GameObject[] itemPrefabs = config.ItemPrefabs;
-            float spawnProbability = config.ItemSpawnProbability;
+            float spawnInterval = config.ItemSpawnInterval;
 
             if (itemPrefabs == null || itemPrefabs.Length == 0)
             {
@@ -210,24 +234,120 @@ namespace PacScripts
                 yield break;
             }
 
+            if (spawnInterval <= 0f) yield break;
+
             while (true)
             {
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(spawnInterval);
 
-                // 按概率判断本秒是否生成道具
-                if (Random.value < spawnProbability)
+                Vector2 spawnPos = GetRandomSpawnPosition();
+                if (!IsPositionInsideWall(spawnPos))
                 {
-                    Vector2 spawnPos = GetRandomSpawnPosition();
-                    if (!IsPositionInsideWall(spawnPos))
+                    // 从道具列表中随机选取一个
+                    int index = Random.Range(0, itemPrefabs.Length);
+                    if (itemPrefabs[index] != null)
                     {
-                        // 从道具列表中随机选取一个
-                        int index = Random.Range(0, itemPrefabs.Length);
-                        if (itemPrefabs[index] != null)
-                        {
-                            Instantiate(itemPrefabs[index], spawnPos, Quaternion.identity, transform);
-                        }
+                        Instantiate(itemPrefabs[index], spawnPos, Quaternion.identity, transform);
                     }
                 }
+            }
+        }
+
+        // ==================== BGM 控制 ====================
+
+        /// <summary>
+        /// 播放/恢复 BGM：首次进入创建播放器；
+        /// 重新游戏时恢复音量为 1，不从头播放
+        /// </summary>
+        private void PlayBGM()
+        {
+            // 同步静态缓存（供静态方法使用）
+            s_bgmLowMultiplier = bgmLowVolumeMultiplier;
+            s_successSound = successSound;
+            s_failureSound = failureSound;
+
+            // 已有 BGM：恢复满音量并确保播放中
+            if (bgmAudioSource != null)
+            {
+                bgmAudioSource.volume = 1f;
+                if (!bgmAudioSource.isPlaying)
+                    bgmAudioSource.UnPause();
+                return;
+            }
+
+            // 无 BGM 曲目配置
+            if (bgmClip == null)
+                return;
+
+            // 首次创建 BGM 播放器（DontDestroyOnLoad 跨场景保持）
+            GameObject bgmObj = new GameObject("BGM_Player");
+            DontDestroyOnLoad(bgmObj);
+            bgmAudioSource = bgmObj.AddComponent<AudioSource>();
+            bgmAudioSource.clip = bgmClip;
+            bgmAudioSource.volume = 1f;
+            bgmAudioSource.loop = true;
+            bgmAudioSource.Play();
+        }
+
+        /// <summary>
+        /// 降低 BGM 音量（游戏结算时调用，BGM 继续播放不暂停）
+        /// </summary>
+        public static void LowerBGMVolume()
+        {
+            if (bgmAudioSource != null && bgmAudioSource.isPlaying)
+                bgmAudioSource.volume = 1f * s_bgmLowMultiplier;
+        }
+
+        /// <summary>
+        /// 恢复 BGM 满音量（从暂停恢复时调用）
+        /// </summary>
+        public static void RestoreBGMVolume()
+        {
+            if (bgmAudioSource != null)
+                bgmAudioSource.volume = 1f;
+        }
+
+        /// <summary>
+        /// 播放成功音效（2D，不受摄像机距离影响）
+        /// </summary>
+        public static void PlaySuccessSound()
+        {
+            if (s_successSound != null)
+                PlayOneShot2D(s_successSound);
+        }
+
+        /// <summary>
+        /// 播放失败音效（2D，不受摄像机距离影响）
+        /// </summary>
+        public static void PlayFailureSound()
+        {
+            if (s_failureSound != null)
+                PlayOneShot2D(s_failureSound);
+        }
+
+        /// <summary>
+        /// 以 2D 模式播放一次性音效，确保 100% 可听见
+        /// </summary>
+        private static void PlayOneShot2D(AudioClip clip)
+        {
+            GameObject sfxObj = new GameObject("SFX_OneShot");
+            AudioSource src = sfxObj.AddComponent<AudioSource>();
+            src.spatialBlend = 0f; // 2D，不受距离衰减
+            src.volume = 1f;
+            src.PlayOneShot(clip);
+            Destroy(sfxObj, clip.length + 0.1f);
+        }
+
+        /// <summary>
+        /// 停止并销毁 BGM（返回主菜单等场景时调用）
+        /// </summary>
+        public static void StopBGM()
+        {
+            if (bgmAudioSource != null)
+            {
+                bgmAudioSource.Stop();
+                Destroy(bgmAudioSource.gameObject);
+                bgmAudioSource = null;
             }
         }
 

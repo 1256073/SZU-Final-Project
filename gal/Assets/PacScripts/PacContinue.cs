@@ -71,6 +71,9 @@ namespace PacScripts
             {
                 Time.timeScale = 1f;
 
+                // 恢复 BGM 满音量
+                IniPac.RestoreBGMVolume();
+
                 // 通知 PacPause 暂停状态已解除
                 if (pacPause != null)
                 {

@@ -243,6 +243,11 @@ MonoBehaviour:
   - {fileID: 8134565659959845585, guid: 9a9e350c4a0d9e64abc818b34351d35a, type: 3}
   - {fileID: 1273746299068102033, guid: 67b0a630446877e4f94dbb9f1ec22b30, type: 3}
   enemySpawnInterval: 3
+  itemPrefabs:
+  - {fileID: 2497794514426951475, guid: 38c13be9920b4354588b8abbf75542f0, type: 3}
+  - {fileID: 8738678971932556325, guid: 60cdeeaec59d7c449b085109a1822d15, type: 3}
+  - {fileID: 7956210925210306207, guid: 5288a33399f4cc64f815c903fbe65d88, type: 3}
+  itemSpawnInterval: 1
   wallMoveCycle: 3
   wallHorizontalRange: 3
   wallVerticalRange: 3

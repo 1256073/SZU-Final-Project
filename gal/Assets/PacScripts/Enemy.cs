@@ -224,7 +224,7 @@ namespace PacScripts
             if (gameOverTriggered) return;
             gameOverTriggered = true;
             if (pacOver != null && !pacOver.IsGameOver)
-                pacOver.GameOver();
+                pacOver.TriggerGameOverByEnemy();
         }
     }
 }

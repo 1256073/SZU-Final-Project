@@ -37,6 +37,10 @@ namespace PacScripts
         /// <summary>糖分转换速度（将当前糖分按比例转换为移动速度）</summary>
         [SerializeField] private float glucoseToSpeedRate = 0.5f;
 
+        [Header("【音效】")]
+        /// <summary>被拾取时播放的音效</summary>
+        [SerializeField] private AudioClip pickupSound;
+
         // ==================== 内部状态 ====================
 
         /// <summary>是否正在追踪玩家</summary>
@@ -134,6 +138,17 @@ namespace PacScripts
                     player.AddDigestedGlucose(player.CurrentGlucose);
                 }
                 player.ClearGlucose();
+            }
+
+            // 播放拾取音效
+            if (pickupSound != null)
+            {
+                GameObject sfxObj = new GameObject("ItemPickup_SFX");
+                AudioSource src = sfxObj.AddComponent<AudioSource>();
+                src.spatialBlend = 0f;
+                src.volume = 1f;
+                src.PlayOneShot(pickupSound);
+                Destroy(sfxObj, pickupSound.length + 0.1f);
             }
 
             // 销毁自己

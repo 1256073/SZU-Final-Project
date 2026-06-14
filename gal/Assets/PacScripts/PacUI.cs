@@ -158,13 +158,13 @@ namespace PacScripts
 
             if (config != null && config.UnlimitedMode)
             {
-                remainingTimeText.text = "剩余\n时间\n∞";
+                remainingTimeText.text = "剩余时间\n∞";
             }
             else if (pacOver != null)
             {
                 float remaining = pacOver.RemainingTime;
                 if (remaining < 0f) remaining = 0f;
-                remainingTimeText.text = "剩余\n时间\n" + Mathf.CeilToInt(remaining);
+                remainingTimeText.text = "剩余时间\n" + Mathf.CeilToInt(remaining);
             }
         }
 
@@ -200,7 +200,7 @@ namespace PacScripts
         private void RefreshDigestedGlucose()
         {
             if (digestedGlucoseText == null || pacman == null) return;
-            digestedGlucoseText.text = "消化\n糖分\n" + Mathf.FloorToInt(pacman.DigestedGlucose);
+            digestedGlucoseText.text = "消化糖分\n" + Mathf.FloorToInt(pacman.DigestedGlucose);
         }
 
         /// <summary>
@@ -209,7 +209,7 @@ namespace PacScripts
         private void RefreshPlayerSpeed()
         {
             if (playerSpeedText == null || pacman == null) return;
-            playerSpeedText.text = "玩家\n速度\n" + pacman.MoveSpeed.ToString("F1");
+            playerSpeedText.text = "玩家速度\n" + pacman.MoveSpeed.ToString("F1");
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace PacScripts
         {
             if (enemySpeedText == null || config == null) return;
             float spd = config.EnemyInitialMoveSpeed + Time.timeSinceLevelLoad * config.EnemySpeedGrowth;
-            enemySpeedText.text = "敌人\n速度\n" + spd.ToString("F1");
+            enemySpeedText.text = "敌人速度\n" + spd.ToString("F1");
         }
 
         // ==================== 摄像机控制 ====================
