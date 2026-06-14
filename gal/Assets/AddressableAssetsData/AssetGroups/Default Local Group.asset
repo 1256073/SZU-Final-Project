@@ -16,7 +16,12 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: 36795f26c0f43e046989f8d3b353da5b
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 6004aa35d0beac74a93df6333f851c46
+    m_Address: Packages/com.fakecorps.vnovelizer/Runtime/PackageDefault/VNovelizerRes/VNPrefabs/UI/MainMenu/MainMenuPanel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: a72d908d9d108f749bac8b70e89fa930, type: 2}
   m_SchemaSet:
