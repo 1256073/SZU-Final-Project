@@ -219,6 +219,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   disappearDistance: 0.5
-  trackSpeed: 8
+  trackSpeed: 10
   glucoseAddValue: 1
   speedReduceValue: 0.01
