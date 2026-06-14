@@ -223,6 +223,6 @@ MonoBehaviour:
   increaseMaxGlucose: 1
   increaseMoveSpeed: 0
   clearGlucoseBar: 0
-  glucoseMaxAddValue: 25
+  glucoseMaxAddValue: 50
   speedAddValue: 1
   glucoseToSpeedRate: 0.01
