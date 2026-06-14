@@ -37,11 +37,11 @@ MonoBehaviour:
   CG_DataPath: VNovelizerRes/GalleryContent/CG
   Music_DataPath: VNovelizerRes/GalleryContent/Music
   Scene_DataPath: VNovelizerRes/GalleryContent/Scene
-  DefaultSpeakerBoxSprite: {fileID: 21300000, guid: 162f31b1f1c20b641a745847b4a39f53, type: 3}
+  DefaultSpeakerBoxSprite: {fileID: 21300000, guid: 67c78143682edd146899eeec34bd51a8, type: 3}
   DefaultHeadFrameSprite: {fileID: 0}
   SoundObjPath: VNovelizerRes/VNPrefabs/Gameplay/SoundObj
   VideoObjPath: VNovelizerRes/VNPrefabs/Gameplay/VideoObj
-  DefaultScriptName: "\u7B2C\u4E00\u90E8\u5206"
+  DefaultScriptName: "\u5E8F\u7AE0"
   DefaultLineID: 
   EnableLocalization: 0
   LocalizationCollectionName: VN_Scripts

@@ -15,19 +15,19 @@ MonoBehaviour:
   CharacterID: "\u5C0F\u598D"
   ElementSprites:
   - Element: angry
-    Sprite: {fileID: 21300000, guid: 82074bb2a1a39cf448b15bfbb157c817, type: 3}
+    Sprite: {fileID: 21300000, guid: ccd9fd495d755fd47b8998e6bd7f7bff, type: 3}
   - Element: cry
-    Sprite: {fileID: 21300000, guid: 5449c4e3011b4db4aaed28ad450c8883, type: 3}
+    Sprite: {fileID: 21300000, guid: b26bf69d9d2f8ac49be914be35e17904, type: 3}
   - Element: doubt
-    Sprite: {fileID: 21300000, guid: 82f52eab6e115c64d9ccc10730d95b41, type: 3}
+    Sprite: {fileID: 21300000, guid: 6e39a219bf36b0444a18896914380352, type: 3}
   - Element: ignore
-    Sprite: {fileID: 21300000, guid: e08371e76065e404089d1c5b58901e7c, type: 3}
+    Sprite: {fileID: 21300000, guid: 6c297bf486eb2284c9984c3ee2c94cfe, type: 3}
   - Element: normal
-    Sprite: {fileID: 21300000, guid: b95642beee98a34428edf82fe374debb, type: 3}
+    Sprite: {fileID: 21300000, guid: dd8592d830e70a54aa58a899fc8e55a9, type: 3}
   - Element: smile
-    Sprite: {fileID: 21300000, guid: c03750bff8ac65549ad63cb579ef488f, type: 3}
+    Sprite: {fileID: 21300000, guid: fe6aba749a7c5d9478015000e079c683, type: 3}
   HeadSprites: []
-  SpeakerBox: {fileID: 0}
+  SpeakerBox: {fileID: 21300000, guid: 67c78143682edd146899eeec34bd51a8, type: 3}
   HeadFrame: {fileID: 0}
   scale: 0.6
-  offset: {x: 0, y: -30}
+  offset: {x: 0, y: -10}

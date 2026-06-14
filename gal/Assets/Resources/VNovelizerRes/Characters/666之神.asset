@@ -15,9 +15,9 @@ MonoBehaviour:
   CharacterID: "666\u4E4B\u795E"
   ElementSprites:
   - Element: love
-    Sprite: {fileID: 21300000, guid: f3bbba1a0ec97bf40939a811e010a2fc, type: 3}
+    Sprite: {fileID: 21300000, guid: b86a9b4dff4061844ac3eac815dc7e7a, type: 3}
   - Element: normal
-    Sprite: {fileID: 21300000, guid: b21eff02174d57e48bb99204ab35e1bd, type: 3}
+    Sprite: {fileID: 21300000, guid: a654fbfc1a5580640a583cb86155e6a1, type: 3}
   HeadSprites: []
   SpeakerBox: {fileID: 0}
   HeadFrame: {fileID: 0}
