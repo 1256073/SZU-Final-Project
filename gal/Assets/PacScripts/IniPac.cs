@@ -27,11 +27,7 @@ namespace PacScripts
         /// <summary>糖分 Prefab</summary>
         [SerializeField] private GameObject glucosePrefab;
 
-        [Header("【道具生成】")]
-        /// <summary>道具生成概率（每秒概率）</summary>
-        [SerializeField] private float itemSpawnProbability = 0.3f;
-        /// <summary>道具 Prefab 列表</summary>
-        [SerializeField] private GameObject[] itemPrefabs;
+
 
         // ==================== 内部缓存 ====================
 
@@ -204,9 +200,13 @@ namespace PacScripts
         /// </summary>
         private IEnumerator SpawnItemsRoutine()
         {
+            Jump2Pac config = Jump2Pac.Instance;
+            GameObject[] itemPrefabs = config.ItemPrefabs;
+            float spawnProbability = config.ItemSpawnProbability;
+
             if (itemPrefabs == null || itemPrefabs.Length == 0)
             {
-                Debug.LogWarning("IniPac: itemPrefabs 列表为空，无法生成道具。");
+                Debug.LogWarning("IniPac: Jump2Pac.ItemPrefabs 列表为空，无法生成道具。");
                 yield break;
             }
 
@@ -215,7 +215,7 @@ namespace PacScripts
                 yield return new WaitForSeconds(1f);
 
                 // 按概率判断本秒是否生成道具
-                if (Random.value < itemSpawnProbability)
+                if (Random.value < spawnProbability)
                 {
                     Vector2 spawnPos = GetRandomSpawnPosition();
                     if (!IsPositionInsideWall(spawnPos))
