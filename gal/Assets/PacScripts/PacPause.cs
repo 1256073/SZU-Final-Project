@@ -69,6 +69,9 @@ namespace PacScripts
 
             // 暂停游戏
             Time.timeScale = 0f;
+
+            // 降低 BGM 音量
+            IniPac.LowerBGMVolume();
         }
 
         /// <summary>

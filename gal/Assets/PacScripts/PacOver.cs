@@ -34,6 +34,8 @@ namespace PacScripts
         private Pacman pacman;
         private Jump2Pac config;
         private TMP_Text restartLabel;
+        /// <summary>是否由敌人触发结算（失败触发）</summary>
+        private bool causedByEnemy = false;
 
         // ==================== 公共属性 ====================
 
@@ -128,6 +130,15 @@ namespace PacScripts
         // ==================== 游戏结算 ====================
 
         /// <summary>
+        /// 由敌人触发结算（失败）
+        /// </summary>
+        public void TriggerGameOverByEnemy()
+        {
+            causedByEnemy = true;
+            GameOver();
+        }
+
+        /// <summary>
         /// 触发游戏结算
         /// 显示结算 Canvas，暂停游戏，计算并显示分数
         /// 确保只触发一次
@@ -142,6 +153,12 @@ namespace PacScripts
             // 暂停游戏
             Time.timeScale = 0f;
 
+            // 降低 BGM 音量
+            IniPac.LowerBGMVolume();
+
+            // 判定胜负并播放对应音效
+            PlayResultSound();
+
             // 显示结算界面
             if (settlementCanvas != null)
             {
@@ -150,6 +167,30 @@ namespace PacScripts
 
             // 计算并显示分数
             CalculateAndDisplayScore();
+        }
+
+        /// <summary>
+        /// 判定胜负并播放音效：
+        /// 普通模式：倒计时结束=成功，敌人抓到=失败
+        /// 无尽模式：消化糖分=0=失败，否则=成功
+        /// </summary>
+        private void PlayResultSound()
+        {
+            bool isSuccess;
+            if (config != null && config.UnlimitedMode)
+            {
+                float digested = pacman != null ? pacman.DigestedGlucose : 0f;
+                isSuccess = digested > 0f;
+            }
+            else
+            {
+                isSuccess = !causedByEnemy;
+            }
+
+            if (isSuccess)
+                IniPac.PlaySuccessSound();
+            else
+                IniPac.PlayFailureSound();
         }
 
         /// <summary>
