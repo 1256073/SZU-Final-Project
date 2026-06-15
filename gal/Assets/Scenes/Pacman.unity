@@ -1762,12 +1762,10 @@ MonoBehaviour:
   playerPrefab: {fileID: 5813218009262309649, guid: a6a46ffb5773d8c48bf7f2ceeac21666, type: 3}
   glucoseSpawnRate: 100
   glucosePrefab: {fileID: 9022080466880284607, guid: 8821afa8d3c9dd24fa008bc3fd45f0a4, type: 3}
-
   bgmClip: {fileID: 8300000, guid: 1ae84ee633741ac4e95846ad7cd71f3d, type: 3}
-  bgmLowVolumeMultiplier: 0.25
+  bgmLowVolumeMultiplier: 0.5
   successSound: {fileID: 8300000, guid: 31b0e2b9862862a41a851e4bcbcac189, type: 3}
   failureSound: {fileID: 8300000, guid: 761abc55dd8940946b4a2c2321295535, type: 3}
-
 --- !u!114 &360374268
 MonoBehaviour:
   m_ObjectHideFlags: 0
