@@ -6,28 +6,28 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 8c9cfa26abfee488c85f1582747f6a02
-  - enabled: 1
     path: Assets/Scenes/VNGamePlay.unity
     guid: 4e1c7a2573c001b409824182af3e2682
   - enabled: 0
     path: Assets/Scenes/DebugScene.unity
     guid: 00000000000000000000000000000000
   - enabled: 1
-    path: Assets/Scenes/VNDebugScene.unity
-    guid: 34b071fd13b1b9147ae29b666f5bea24
-  - enabled: 1
     path: Assets/Scenes/VNMainMenu.unity
     guid: 889e0008d10fe5a4ea1f7996cd4a4ac3
   - enabled: 1
-    path: Assets/Scenes/Jump2Pac Sample.unity
-    guid: b5117891db546064fb134dce3b58c860
+    path: Assets/Scenes/VNDebugScene.unity
+    guid: 34b071fd13b1b9147ae29b666f5bea24
   - enabled: 1
     path: Assets/Scenes/PacTutorial1.unity
     guid: b5ca65dd0147e9b4ca4337a6fe598e71
   - enabled: 1
+    path: Assets/Scenes/Jump2Pac Sample.unity
+    guid: b5117891db546064fb134dce3b58c860
+  - enabled: 1
     path: Assets/Scenes/Pacman.unity
     guid: 846a2d07392afdc4f8ba9348e5fa5f9f
+  - enabled: 1
+    path: Assets/Scenes/SampleScene.unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 7d3dd9cb1e898094aad10ef2ac7839ca, type: 2}

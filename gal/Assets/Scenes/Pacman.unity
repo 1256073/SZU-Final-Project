@@ -1762,11 +1762,6 @@ MonoBehaviour:
   playerPrefab: {fileID: 5813218009262309649, guid: a6a46ffb5773d8c48bf7f2ceeac21666, type: 3}
   glucoseSpawnRate: 50
   glucosePrefab: {fileID: 9022080466880284607, guid: 8821afa8d3c9dd24fa008bc3fd45f0a4, type: 3}
-  itemSpawnProbability: 1
-  itemPrefabs:
-  - {fileID: 2497794514426951475, guid: 38c13be9920b4354588b8abbf75542f0, type: 3}
-  - {fileID: 8738678971932556325, guid: 60cdeeaec59d7c449b085109a1822d15, type: 3}
-  - {fileID: 7956210925210306207, guid: 5288a33399f4cc64f815c903fbe65d88, type: 3}
 --- !u!114 &360374268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1830,6 +1825,8 @@ MonoBehaviour:
   playerSpeedText: {fileID: 1755768796}
   enemySpeedText: {fileID: 1645964367}
   glucoseSlider: {fileID: 783585382}
+  glucoseNormalColor: {r: 1, g: 1, b: 1, a: 1}
+  glucoseFullColor: {r: 1, g: 0, b: 0, a: 1}
   cameraZoomButton: {fileID: 224428523}
   targetCamera: {fileID: 1383479411}
   zoomedOrthoSize: 20
@@ -8980,6 +8977,7 @@ GameObject:
   - component: {fileID: 2112506668}
   - component: {fileID: 2112506667}
   - component: {fileID: 2112506666}
+  - component: {fileID: 2112506669}
   m_Layer: 5
   m_Name: Button (1)
   m_TagString: Untagged
@@ -9050,7 +9048,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2112506667}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2112506669}
+        m_TargetAssemblyTypeName: ReturnToMainMenu, Assembly-CSharp
+        m_MethodName: GoToMainMenu
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2112506667
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9089,6 +9099,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2112506664}
   m_CullTransparentMesh: 1
+--- !u!114 &2112506669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2112506664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb15274e54f979349a20c03e98d89951, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetSceneName: MainMenu
 --- !u!1001 &5340785200615554680
 PrefabInstance:
   m_ObjectHideFlags: 0
