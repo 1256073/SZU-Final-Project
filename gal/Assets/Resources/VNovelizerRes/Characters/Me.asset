@@ -15,7 +15,7 @@ MonoBehaviour:
   CharacterID: Me
   ElementSprites: []
   HeadSprites: []
-  SpeakerBox: {fileID: 0}
+  SpeakerBox: {fileID: 21300000, guid: 4992ba44087282a44b01173b57775292, type: 3}
   HeadFrame: {fileID: 0}
   scale: 1
   offset: {x: 0, y: 0}

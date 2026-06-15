@@ -21,7 +21,7 @@ MonoBehaviour:
   - Element: asd
     Sprite: {fileID: 21300000, guid: f975ee545d49a004f874cd24cac2190d, type: 3}
   HeadSprites: []
-  SpeakerBox: {fileID: 0}
+  SpeakerBox: {fileID: 21300000, guid: 4bf32818c647b7c45be22fcd247b8196, type: 3}
   HeadFrame: {fileID: 0}
   scale: 0.6
   offset: {x: 0, y: -45}
