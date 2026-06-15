@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 namespace PacScripts
 {
@@ -21,6 +22,10 @@ namespace PacScripts
         [Header("【场景跳转】")]
         /// <summary>用于触发进入 Pacman 场景的 UI 按钮</summary>
         [SerializeField] private Button startButton;
+        /// <summary>开始按钮的文本标签（运行时自动从 startButton 子级获取 TMP_Text）</summary>
+        private TMP_Text startLabel;
+        /// <summary>Jump2Pac 所在原始场景（DontDestroyOnLoad 前缓存，用于正确卸载）</summary>
+        private Scene originalScene;
         /// <summary>教学模式场景名称</summary>
         [SerializeField] private string tutorialSceneName = "Tutorial";
         /// <summary>Pacman 场景名称</summary>
@@ -85,6 +90,10 @@ namespace PacScripts
 
         private void Awake()
         {
+            // 必须在 DontDestroyOnLoad 之前缓存原始场景
+            // （DontDestroyOnLoad 会将对象移到持久场景，gameObject.scene 会变）
+            originalScene = gameObject.scene;
+
             // 单例模式：确保全局唯一，且场景切换时不销毁
             if (Instance != null && Instance != this)
             {
@@ -97,9 +106,14 @@ namespace PacScripts
 
         private void Start()
         {
-            // 绑定按钮点击事件
+            // 缓存按钮文本标签
             if (startButton != null)
             {
+                startLabel = startButton.GetComponentInChildren<TMP_Text>();
+                if (startLabel != null)
+                {
+                    startLabel.text = "开始挑战";
+                }
                 startButton.onClick.AddListener(OnStartButtonClicked);
             }
         }
@@ -120,9 +134,33 @@ namespace PacScripts
         /// </summary>
         private void OnStartButtonClicked()
         {
+            // 修改按钮文字为加载状态
+            if (startLabel != null)
+            {
+                startLabel.text = "加载中...";
+            }
+            // 禁用按钮防止重复点击
+            if (startButton != null)
+            {
+                startButton.interactable = false;
+            }
+
             Time.timeScale = 1f;
             string target = teachingMode ? tutorialSceneName : pacmanSceneName;
-            SceneManager.LoadScene(target);
+
+            // 使用 Additive 模式加载，避免销毁 VN 场景
+            // 注意：必须用 Awake 中缓存的 originalScene，不能用 gameObject.scene
+            // （因为 Jump2Pac 是 DontDestroyOnLoad，gameObject.scene 是持久场景）
+            Scene sceneToUnload = originalScene;
+            AsyncOperation loadOp = SceneManager.LoadSceneAsync(target, LoadSceneMode.Additive);
+            loadOp.completed += (_) =>
+            {
+                if (sceneToUnload.isLoaded)
+                {
+                    Debug.Log($"[Jump2Pac] 卸载原场景: {sceneToUnload.name}");
+                    SceneManager.UnloadSceneAsync(sceneToUnload);
+                }
+            };
         }
     }
 }

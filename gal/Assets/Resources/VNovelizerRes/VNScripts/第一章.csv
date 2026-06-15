@@ -30,7 +30,7 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1028,Me,,,hide,,挑战是什么，你说的对小妍好又是什么,,,,,
 1029,神,,,神normal,,挑战的话Boy待会自然会知道，Boy要是Success了Me就可以实现一个对小妍有好处的愿望,,,,,
 1030,Me,,,hide,,哼，放马过来,,,,,
-1031,Me,,,,,,,,,choice(进入与神明的挑战|loadscene(Jump2Pac Sample)),
+1031,Me,,,,,,,,,choice(进入与神明的挑战|jump_pacman(Jump2Pac1)),
 1032,,,,,,,,,,,
 1033,,,,,,,,,,,
 1034,,,,,,,,,,,

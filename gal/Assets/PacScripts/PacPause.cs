@@ -17,6 +17,10 @@ namespace PacScripts
         /// <summary>暂停界面 Canvas</summary>
         [SerializeField] private Canvas pauseCanvas;
 
+        [Header("【返回剧情】")]
+        /// <summary>返回剧情按钮（卸载小游戏，回到 VN）</summary>
+        [SerializeField] private Button backToVNButton;
+
         // ==================== 内部状态 ====================
 
         /// <summary>当前是否处于暂停状态，防止重复触发</summary>
@@ -37,6 +41,12 @@ namespace PacScripts
             {
                 pauseButton.onClick.AddListener(OnPauseButtonClicked);
             }
+
+            // 绑定返回剧情按钮事件
+            if (backToVNButton != null)
+            {
+                backToVNButton.onClick.AddListener(OnBackToVNClicked);
+            }
         }
 
         private void OnDestroy()
@@ -45,6 +55,10 @@ namespace PacScripts
             if (pauseButton != null)
             {
                 pauseButton.onClick.RemoveListener(OnPauseButtonClicked);
+            }
+            if (backToVNButton != null)
+            {
+                backToVNButton.onClick.RemoveListener(OnBackToVNClicked);
             }
         }
 
@@ -80,6 +94,17 @@ namespace PacScripts
         public void MarkResumed()
         {
             isPaused = false;
+        }
+
+        // ==================== 返回剧情 ====================
+
+        /// <summary>
+        /// 点击返回剧情按钮：恢复时间流速，卸载小游戏场景，回到 VN
+        /// </summary>
+        private void OnBackToVNClicked()
+        {
+            Time.timeScale = 1f;
+            SceneLoader.Instance?.UnloadMiniGame();
         }
     }
 }

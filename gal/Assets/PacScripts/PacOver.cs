@@ -26,6 +26,10 @@ namespace PacScripts
         [Header("【重开按钮】")]
         [SerializeField] private Button restartButton;
 
+        [Header("【返回剧情】")]
+        /// <summary>返回剧情按钮（卸载小游戏，回到 VN）</summary>
+        [SerializeField] private Button backToVNButton;
+
         // ==================== 内部状态 ====================
 
         private float elapsedTime = 0f;
@@ -92,6 +96,12 @@ namespace PacScripts
                 restartButton.onClick.AddListener(RestartGame);
                 restartLabel = restartButton.GetComponentInChildren<TMP_Text>();
             }
+
+            // 绑定返回剧情按钮
+            if (backToVNButton != null)
+            {
+                backToVNButton.onClick.AddListener(BackToVN);
+            }
         }
 
         private void Update()
@@ -124,6 +134,10 @@ namespace PacScripts
             if (restartButton != null)
             {
                 restartButton.onClick.RemoveListener(RestartGame);
+            }
+            if (backToVNButton != null)
+            {
+                backToVNButton.onClick.RemoveListener(BackToVN);
             }
         }
 
@@ -201,6 +215,15 @@ namespace PacScripts
             if (restartLabel != null) restartLabel.text = "加载中...";
             Time.timeScale = 1f;
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        /// <summary>
+        /// 返回剧情：恢复时间流速，卸载小游戏场景，回到 VN
+        /// </summary>
+        public void BackToVN()
+        {
+            Time.timeScale = 1f;
+            SceneLoader.Instance?.UnloadMiniGame();
         }
 
         // ==================== 分数计算 ====================
