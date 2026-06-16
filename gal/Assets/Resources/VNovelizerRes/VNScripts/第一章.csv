@@ -31,8 +31,8 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1029,神,,,神_normal,,"挑战的话Boy待会自然会知道，Boy要是Success了Me就可以实现
 一个对小妍有好处的愿望",,,,,
 1030,Me,,,hide,,哼，放马过来,,,,,
-1031,Me,,,,,,,,,,choice(进入与神明的挑战|jump_pacman(Jump2Pac1))
-1032,,,,,,,,,,,
+1031,Me,,,,,,,,,choice(进入与神明的挑战|jump_pacman(Jump2Pac1)),
+1032,Me,,,,,,,,,,
 1033,神,hide,hide,神_normal,hide,Good job，Boy，现在你可以向崇高的Me许愿了,神秘之间,胜利,,,
 1034,Me,,,hide,,把她的糖尿病治好,,,,,
 1035,神,,,神_normal,,Sorry，这个做不到呢~,,,,,

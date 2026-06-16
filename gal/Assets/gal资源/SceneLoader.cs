@@ -92,18 +92,7 @@ public class SceneLoader : MonoBehaviour
 
     IEnumerator UnloadRoutine()
     {
-        // 1. 如果 VN 场景丢失，重新加载
-        Scene vnScene = GetVNScene();
-        if (!vnScene.isLoaded)
-        {
-            Debug.Log($"[SceneLoader] VN 场景已丢失，重新加载: {vnScenePath}");
-            AsyncOperation reloadOp = SceneManager.LoadSceneAsync(vnScenePath, LoadSceneMode.Additive);
-            while (!reloadOp.isDone) yield return null;
-            // 重新缓存 UI 引用（旧引用已失效）
-            CacheVNUIReferences();
-        }
-
-        // 2. 卸载所有不属于 VN 场景的非持久场景
+        // 卸载所有非持久、非 VN 的场景
         int sceneCount = SceneManager.sceneCount;
         for (int i = sceneCount - 1; i >= 0; i--)
         {
@@ -118,7 +107,11 @@ public class SceneLoader : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning($"[SceneLoader] 无法卸载场景: {s.name}");
+                    // 场景无法卸载（VN 场景已丢导致它是唯一场景）
+                    // 退而求其次：禁用该场景所有根对象
+                    Debug.LogWarning($"[SceneLoader] 无法卸载场景: {s.name}，改为禁用所有根对象");
+                    foreach (var root in s.GetRootGameObjects())
+                        root.SetActive(false);
                 }
             }
         }
@@ -126,7 +119,7 @@ public class SceneLoader : MonoBehaviour
         currentMiniGameScene = null;
         IsMiniGameRunning = false;
 
-        // 3. 恢复 VN UI
+        // 恢复 VN UI（如果 VN 场景还活着的话）
         EnableVNUI();
     }
 
@@ -152,7 +145,7 @@ public class SceneLoader : MonoBehaviour
 
     private void EnableVNUI()
     {
-        // 先禁掉非 VN 场景的 EventSystem，防止冲突
+        // 1. 禁用所有非 VN 场景中的 Canvas 和 EventSystem（防止点击拦截和冲突）
         int sceneCount = SceneManager.sceneCount;
         for (int i = 0; i < sceneCount; i++)
         {
@@ -161,15 +154,21 @@ public class SceneLoader : MonoBehaviour
             {
                 foreach (var root in s.GetRootGameObjects())
                 {
+                    // 禁用 Canvas 防止覆盖 VN UI
+                    foreach (var canvas in root.GetComponentsInChildren<Canvas>())
+                        if (canvas != null) canvas.gameObject.SetActive(false);
+                    // 禁用 EventSystem 防止输入冲突
                     foreach (var es in root.GetComponentsInChildren<EventSystem>())
-                    {
                         if (es != null) es.gameObject.SetActive(false);
-                    }
                 }
             }
         }
 
-        // 恢复 VN UI
+        // 2. 隐藏 UIManager 在 Additive 场景加载时误创建的 MainMenuPanel
+        var mainMenu = Object.FindFirstObjectByType<MainMenuPanel>(FindObjectsInactive.Include);
+        if (mainMenu != null) mainMenu.gameObject.SetActive(false);
+
+        // 3. 恢复 VN UI
         if (mainCanvas) mainCanvas.SetActive(true);
         if (mainEventSystem) mainEventSystem.SetActive(true);
 

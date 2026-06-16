@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using VNovelizer.Core.Utils;
 
 namespace VNovelizer.Core.Commands
 {
@@ -9,7 +10,7 @@ namespace VNovelizer.Core.Commands
 
         public override bool Execute(string args)
         {
-            return true; // ¹Ø¼ü£º±ØĞë·µ»Ø true
+            return true;
         }
 
         public override IEnumerator ExecuteAsync(string args)
@@ -18,18 +19,22 @@ namespace VNovelizer.Core.Commands
 
             if (SceneLoader.Instance == null)
             {
-                Debug.LogError("[JumpPacman] SceneLoader Î´ÕÒµ½");
+                Debug.LogError("[JumpPacman] SceneLoader æœªæ‰¾åˆ°");
                 yield break;
             }
 
-            Debug.Log($"[JumpPacman] ¼ÓÔØĞ¡ÓÎÏ·: {sceneName}");
+            Debug.Log($"[JumpPacman] åŠ è½½å°æ¸¸æˆ: {sceneName}");
             SceneLoader.Instance.LoadMiniGame(sceneName);
 
-            // µÈ´ıĞ¡ÓÎÏ·½áÊø
+            // ç­‰å¾…å°æ¸¸æˆç»“æŸ
             while (SceneLoader.Instance.IsMiniGameRunning)
                 yield return null;
 
-            Debug.Log("[JumpPacman] Ğ¡ÓÎÏ·½áÊø£¬¼ÌĞø¾çÇé");
+            Debug.Log("[JumpPacman] å°æ¸¸æˆç»“æŸï¼Œè¯·æ±‚æ¨è¿›åˆ°ä¸‹ä¸€è¡Œ");
+
+            // é€šè¿‡ VNovelizer å®˜æ–¹æœºåˆ¶è§¦å‘è‡ªåŠ¨æ¨è¿›
+            // ExecuteActionsAndContinue ä¼šåœ¨åç¨‹ç»“æŸåæ£€æŸ¥æ­¤æ ‡è®°å¹¶æ¨è¿›
+            VNCommandBridge.AdvanceAfterCommands();
         }
 
         public override void Interrupt()
