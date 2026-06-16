@@ -4,7 +4,7 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1002,Me,,,,,还是这电瓶陪我最久了，这玩意能变成电瓶娘吗......,,,,,
 1003,Me,,,,,我靠！？,夜路3,,刹车,,
 1004,Me,,,,,,,,,choice(直接创飞|jump(1005))&choice(下意识躲闪|jump(1008)),
-1005,Me,hide,hide,hide,hide,前面路上还有一些碎石，你摔了个狗啃泥,夜路3,,额啊啊,,
+1005,Me,hide,hide,,hide,前面路上还有一些碎石，你摔了个狗啃泥,夜路3,,额啊啊,,
 1006,Me,,,,,刚刚创飞的东西不见了,夜路,,hide,,
 1007,Me,,,,,,,,,jump(1011),
 1008,Me,hide,hide,hide,hide,由于惯性和紧张的作用，你摔了个狗啃泥,夜路3,,额啊啊,,
@@ -53,7 +53,7 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1046,Me,,,hide,,"在我的软磨硬泡之下，她还是把糖收好了，这位叫做“小妍”的女孩
 患有的糖尿病是1型糖尿病",,,,,
 1047,Me,,,,,说实话比我想象的要严重，总之之后的住院生活跟她好好相处吧,,,,,
-1048,Me,,,,,,,,,"choice(进入下一章|loadScript(第一章,1000))",
+1048,Me,,,,,,,,,"choice(进入第一章|loadScript(第一章,1000))",
 1049,,,,,,,,,,,
 1050,,,,,,,,,,,
 1051,,,,,,,,,,,

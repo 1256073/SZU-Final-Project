@@ -29,5 +29,5 @@ MonoBehaviour:
   HeadSprites: []
   SpeakerBox: {fileID: 21300000, guid: 24f2ee60caa74a54db27ba1aa00eb501, type: 3}
   HeadFrame: {fileID: 0}
-  scale: 0.6
-  offset: {x: 0, y: -10}
+  scale: 0.7
+  offset: {x: 0, y: -400}
