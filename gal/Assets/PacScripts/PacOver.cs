@@ -223,6 +223,7 @@ namespace PacScripts
         public void BackToVN()
         {
             Time.timeScale = 1f;
+            IniPac.StopBGM();
             SceneLoader.Instance?.UnloadMiniGame();
         }
 

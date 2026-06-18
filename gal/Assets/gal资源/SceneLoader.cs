@@ -20,6 +20,10 @@ public class SceneLoader : MonoBehaviour
     private List<Canvas> vnCanvases = new List<Canvas>();
     /// <summary>VN 场景中所有 EventSystem（用于批量禁用/恢复）</summary>
     private List<EventSystem> vnEventSystems = new List<EventSystem>();
+    /// <summary>VN 场景中所有 AudioListener（进入小游戏时禁用，防止多 AudioListener）</summary>
+    private List<AudioListener> vnAudioListeners = new List<AudioListener>();
+    /// <summary>SceneLoader 自带的兜底 AudioListener（DontDestroyOnLoad，VN 场景丢失时保证始终有一个）</summary>
+    private AudioListener fallbackAudioListener;
 
     void Awake()
     {
@@ -32,7 +36,20 @@ public class SceneLoader : MonoBehaviour
 
         DontDestroyOnLoad(gameObject);
 
+        // 创建兜底 AudioListener：SceneLoader 是 DontDestroyOnLoad，此 Listener 永不销毁
+        fallbackAudioListener = GetComponent<AudioListener>();
+        if (fallbackAudioListener == null)
+            fallbackAudioListener = gameObject.AddComponent<AudioListener>();
+        fallbackAudioListener.enabled = true;
+
         CacheVNUIReferences();
+
+        // 禁用 VN 场景自带的 AudioListener，统一由兜底 Listener 接管
+        foreach (var al in vnAudioListeners)
+        {
+            if (al != null)
+                al.enabled = false;
+        }
     }
 
     /// <summary>缓存当前 VN 场景中的所有 Canvas 和 EventSystem 引用</summary>
@@ -40,6 +57,7 @@ public class SceneLoader : MonoBehaviour
     {
         vnCanvases.Clear();
         vnEventSystems.Clear();
+        vnAudioListeners.Clear();
 
         Scene vnScene = GetVNScene();
         if (!vnScene.isLoaded) return;
@@ -51,6 +69,9 @@ public class SceneLoader : MonoBehaviour
 
             var eventSystems = root.GetComponentsInChildren<EventSystem>(includeInactive: true);
             vnEventSystems.AddRange(eventSystems);
+
+            var audioListeners = root.GetComponentsInChildren<AudioListener>(includeInactive: true);
+            vnAudioListeners.AddRange(audioListeners);
         }
     }
 
@@ -119,6 +140,11 @@ public class SceneLoader : MonoBehaviour
         currentMiniGameScene = null;
         IsMiniGameRunning = false;
 
+        // 清理小游戏残留的 DontDestroyOnLoad BGM 播放器（兜底）
+        var bgmPlayer = GameObject.Find("BGM_Player");
+        if (bgmPlayer != null)
+            Destroy(bgmPlayer);
+
         // 恢复 VN UI（如果 VN 场景还活着的话）
         EnableVNUI();
     }
@@ -141,11 +167,22 @@ public class SceneLoader : MonoBehaviour
             if (es != null && es.gameObject != mainEventSystem)
                 es.gameObject.SetActive(false);
         }
+
+        // 禁用 VN 场景的 AudioListener（如果还存在）
+        foreach (var al in vnAudioListeners)
+        {
+            if (al != null)
+                al.enabled = false;
+        }
+
+        // 禁用兜底 AudioListener，让小游戏独占
+        if (fallbackAudioListener != null)
+            fallbackAudioListener.enabled = false;
     }
 
     private void EnableVNUI()
     {
-        // 1. 禁用所有非 VN 场景中的 Canvas 和 EventSystem（防止点击拦截和冲突）
+        // 1. 禁用所有非 VN 场景中的 Canvas、EventSystem 和 AudioListener（防止冲突）
         int sceneCount = SceneManager.sceneCount;
         for (int i = 0; i < sceneCount; i++)
         {
@@ -160,15 +197,25 @@ public class SceneLoader : MonoBehaviour
                     // 禁用 EventSystem 防止输入冲突
                     foreach (var es in root.GetComponentsInChildren<EventSystem>())
                         if (es != null) es.gameObject.SetActive(false);
+                    // 禁用 AudioListener 防止出现多个 AudioListener
+                    foreach (var al in root.GetComponentsInChildren<AudioListener>())
+                        if (al != null) al.enabled = false;
                 }
             }
         }
 
-        // 2. 隐藏 UIManager 在 Additive 场景加载时误创建的 MainMenuPanel
+        // 2. 禁用 VN 场景中可能残留的 AudioListener（避免与兜底 Listener 冲突）
+        foreach (var al in vnAudioListeners)
+        {
+            if (al != null)
+                al.enabled = false;
+        }
+
+        // 3. 隐藏 UIManager 在 Additive 场景加载时误创建的 MainMenuPanel
         var mainMenu = Object.FindFirstObjectByType<MainMenuPanel>(FindObjectsInactive.Include);
         if (mainMenu != null) mainMenu.gameObject.SetActive(false);
 
-        // 3. 恢复 VN UI
+        // 4. 恢复 VN UI
         if (mainCanvas) mainCanvas.SetActive(true);
         if (mainEventSystem) mainEventSystem.SetActive(true);
 
@@ -183,5 +230,9 @@ public class SceneLoader : MonoBehaviour
             if (es != null && es.gameObject != mainEventSystem)
                 es.gameObject.SetActive(true);
         }
+
+        // 5. 启用兜底 AudioListener（DontDestroyOnLoad，保证始终有一个）
+        if (fallbackAudioListener != null)
+            fallbackAudioListener.enabled = true;
     }
 }
