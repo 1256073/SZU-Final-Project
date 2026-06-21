@@ -236,13 +236,13 @@ MonoBehaviour:
   gameTimeLimit: 120
   playerInitialMoveSpeed: 5
   playerMaxGlucose: 100
-  enemyInitialMoveSpeed: 2
-  enemySpeedGrowth: 0.1
+  enemyInitialMoveSpeed: 3
+  enemySpeedGrowth: 0.2
   enemyPrefabs:
   - {fileID: 4139550769376307926, guid: 4a0780fd9b11cbb4a85aeab75eccd16e, type: 3}
   - {fileID: 8134565659959845585, guid: 9a9e350c4a0d9e64abc818b34351d35a, type: 3}
   - {fileID: 1273746299068102033, guid: 67b0a630446877e4f94dbb9f1ec22b30, type: 3}
-  enemySpawnInterval: 3
+  enemySpawnInterval: 1
   itemPrefabs:
   - {fileID: 2497794514426951475, guid: 38c13be9920b4354588b8abbf75542f0, type: 3}
   - {fileID: 8738678971932556325, guid: 60cdeeaec59d7c449b085109a1822d15, type: 3}
