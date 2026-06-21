@@ -5,8 +5,8 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1003,护士,,,,,不行哦~,,,,,
 1004,hide,,,护士_angry,,不好，又回想起那个恐怖的笑容了,,,,,
 1005,hide,,,,,虽然知道她不能拿我怎么样，但还是先当个乖宝宝吧,,,,,
-1006,hide,,,,,"不着调的神明...从那以后过了一天,虽然我只想把这事当成
-噩梦，但还是赶快展示你的神迹吧",,,,,
+1006,hide,,,,,"不着调的神明...从那以后过了一天,虽然我只想把这事当成噩梦，但还是
+赶快展示你的神迹吧",,,,,
 1007,小妍,,,小妍_normal,,......,,,,,
 1008,小妍,,,小妍_normal,,哥哥，护士姐姐说我今天可以吃糖了,,,,,
 1009,hide,,,,,竟然不是大叔了，好耶,,,,,
@@ -39,10 +39,10 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1035,hide,,,,,这么随性的吗,,,,,
 1036,Me,,,,,那你随意吧,,,,,
 1037,小妍,,,小妍_smile,,嗯~,,,,,
-1038,Me,,,小妍_smile,,头怎么又开始晕了,,,,,闭眼特效
+1038,hide,,,小妍_smile,,头怎么又开始晕了,,,,,闭眼特效
 1039,hide,,,,,...,black,,,,
-1040,hide,,,hide,,......,black,hop,,,
-1041,hide,,,神_normal,,突然感觉很不爽......,神秘之间,,,,
+1040,hide,,,,,......,,,,,
+1041,hide,,,神_normal,,突然感觉很不爽......,神秘之间,hop,,,
 1042,hide,,,hide,,为什么这个神明总是在奇怪的情景把人拉进来,,,,,
 1043,神,,,神_love,,Oh！Boy，要是等你Sleep了再把你拉进来不是太Boring了吗,,,,,
 1044,神,,,神_love,,不说这个了！Boy，欣赏到Me崇高伟大的神迹了吗！,,,,,
@@ -56,7 +56,7 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1052,Me,,,hide,,？？？完全不懂,,,,,
 1053,神,,,神_normal,,所以You见不到Me的时候也不要想Me哦~,,,,,
 1054,Me,,,神_normal,,给我说重点,,,,,
-1055,神,,,神_love,,啊嗯~Boy怎么是这么冷冰冰的Man呢,,,,,
+1055,神,,,神_love,,啊嗯~Boy怎么是这么冷冰冰的Man呢,,,,,人物淡出
 1056,神,,,神_normal,,"所以即使不是Me的挑战，Boy也不得不跨越了，Success了不会有
 什么，But！Fail了就很可能有严重后果",,,,,
 1057,Me,,,神_normal,,什么严重后果,,,,,
@@ -69,8 +69,8 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1064,护士,,,护士_normal,,该换药了先生~,,,,,
 1065,Me,,,hide,,额，好,,,,,
 1066,护士,,,护士_normal,,......,,,,,
-1067,hide,,,,,,医院早,,,,
-1068,hide,,,,,,医院晚,,,,
+1067,hide,,,,,...,医院早,,,,
+1068,hide,,,,,...,医院晚,,,,
 1069,Me,,,,,好像恢复得还挺好的,医院早,,,,下一章
 1070,Me,,,,,这应该是好事...,病房,,,,
 1071,hide,,,,,,,,,"choice(进入第三章|loadScript(第三章,1000))",

@@ -18,7 +18,7 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: b1d170e83fe2c0f4aa6533e3fb5bda83, type: 3}
   - Element: normal
     Sprite: {fileID: 21300000, guid: 989997cfe34c69e469dc8bcca0d08df2, type: 3}
-  - Element: asd
+  - Element: sad
     Sprite: {fileID: 21300000, guid: f975ee545d49a004f874cd24cac2190d, type: 3}
   HeadSprites: []
   SpeakerBox: {fileID: 21300000, guid: 4bf32818c647b7c45be22fcd247b8196, type: 3}
