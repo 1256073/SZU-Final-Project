@@ -400,10 +400,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1594397320915141393, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
-      propertyPath: galleryBtn
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 4061087443080647164, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -516,14 +512,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6602374828543005265, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
-      propertyPath: m_Name
-      value: MiniGame
-      objectReference: {fileID: 0}
-    - target: {fileID: 7403463027578924578, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
-      propertyPath: m_text
-      value: "\u5C0F\u6E38\u620F"
-      objectReference: {fileID: 0}
     - target: {fileID: 7406932118142169215, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
       propertyPath: m_Name
       value: VNGamePlayCanvas
@@ -547,63 +535,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 6813163465208587011, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5754667332413686850}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
---- !u!114 &5754667332413686848 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4006061236814241302, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
-  m_PrefabInstance: {fileID: 5754667332413686847}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
---- !u!1 &5754667332413686849 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6813163465208587011, guid: f2f79f57c4bd8f143a0f3e8aa7962791, type: 3}
-  m_PrefabInstance: {fileID: 5754667332413686847}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &5754667332413686850
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5754667332413686849}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 577d2ba19495b9c46a2d23b8cb38ca1a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  startButton: {fileID: 5754667332413686848}
-  buttonLabel: "\u5C0F\u6E38\u620F"
-  tutorialSceneName: Tutorial
-  pacmanSceneName: Pacman
-  teachingMode: 0
-  unlimitedMode: 1
-  gameTimeLimit: 120
-  playerInitialMoveSpeed: 5
-  playerMaxGlucose: 100
-  enemyInitialMoveSpeed: 2
-  enemySpeedGrowth: 0.1
-  enemyPrefabs:
-  - {fileID: 4139550769376307926, guid: 4a0780fd9b11cbb4a85aeab75eccd16e, type: 3}
-  - {fileID: 8134565659959845585, guid: 9a9e350c4a0d9e64abc818b34351d35a, type: 3}
-  - {fileID: 1273746299068102033, guid: 67b0a630446877e4f94dbb9f1ec22b30, type: 3}
-  enemySpawnInterval: 3
-  itemPrefabs:
-  - {fileID: 2497794514426951475, guid: 38c13be9920b4354588b8abbf75542f0, type: 3}
-  - {fileID: 8738678971932556325, guid: 60cdeeaec59d7c449b085109a1822d15, type: 3}
-  - {fileID: 7956210925210306207, guid: 5288a33399f4cc64f815c903fbe65d88, type: 3}
-  itemSpawnInterval: 1
-  wallMoveCycle: 3
-  wallHorizontalRange: 3
-  wallVerticalRange: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

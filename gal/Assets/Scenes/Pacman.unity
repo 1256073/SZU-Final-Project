@@ -1781,7 +1781,6 @@ MonoBehaviour:
   pauseButton: {fileID: 1675093731}
   pauseCanvas: {fileID: 388407381}
   backToVNButton: {fileID: 517008242}
-  skipButton: {fileID: 517008242}
 --- !u!114 &360374269
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1990,7 +1989,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &388407379
 MonoBehaviour:
   m_ObjectHideFlags: 0
