@@ -28,6 +28,10 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: fe6aba749a7c5d9478015000e079c683, type: 3}
   - Element: worry
     Sprite: {fileID: 21300000, guid: b245b4cf1c64ff84786f778e479cec19, type: 3}
+  - Element: laugh
+    Sprite: {fileID: 21300000, guid: 093bd76619206c2488aa4ec8b0d4367b, type: 3}
+  - Element: sp
+    Sprite: {fileID: 21300000, guid: 08b99ec93e34f174fad077714c796eef, type: 3}
   HeadSprites: []
   SpeakerBox: {fileID: 21300000, guid: 24f2ee60caa74a54db27ba1aa00eb501, type: 3}
   HeadFrame: {fileID: 0}
