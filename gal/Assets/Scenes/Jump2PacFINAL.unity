@@ -232,7 +232,7 @@ MonoBehaviour:
   buttonLabel: "\u8FDB\u5165\u6311\u6218"
   tutorialSceneName: PacTutorial
   pacmanSceneName: Pacman
-  teachingMode: 0
+  teachingMode: 1
   unlimitedMode: 0
   gameTimeLimit: 60
   playerInitialMoveSpeed: 5

@@ -59,7 +59,7 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1057,Me,,,,,时间不早了，得回去了...,,,,,
 1058,小妍,,,小妍_worry,,......,,,,,
 1059,hide,,,,,,医院下午,,,,
-1060,hide,,,,,,,,,"choice(进入第八章|loadScript(第八章,1000))",
+1060,hide,,,,,,,,,"choice(进入第八章|loadScript(第八章1,1000))",
 1061,,,,,,,,,,,
 1062,,,,,,,,,,,
 1063,,,,,,,,,,,
