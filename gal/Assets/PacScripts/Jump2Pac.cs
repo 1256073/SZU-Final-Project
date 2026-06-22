@@ -125,6 +125,12 @@ namespace PacScripts
             {
                 startButton.onClick.RemoveListener(OnStartButtonClicked);
             }
+
+            // 【Bug修复】清理静态单例引用，避免场景重载时新实例自我销毁
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         // ==================== 场景跳转 ====================
