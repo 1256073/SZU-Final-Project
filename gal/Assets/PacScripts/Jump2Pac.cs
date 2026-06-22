@@ -22,6 +22,8 @@ namespace PacScripts
         [Header("【场景跳转】")]
         /// <summary>用于触发进入 Pacman 场景的 UI 按钮</summary>
         [SerializeField] private Button startButton;
+        /// <summary>按钮显示文字（可在 Inspector 中按实例定制）</summary>
+        [SerializeField] private string buttonLabel = "小游戏";
         /// <summary>开始按钮的文本标签（运行时自动从 startButton 子级获取 TMP_Text）</summary>
         private TMP_Text startLabel;
         /// <summary>Jump2Pac 所在原始场景（DontDestroyOnLoad 前缓存，用于正确卸载）</summary>
@@ -109,10 +111,15 @@ namespace PacScripts
             // 缓存按钮文本标签
             if (startButton != null)
             {
+                // 优先从子级查找 TMP_Text，找不到则从按钮自身查找
                 startLabel = startButton.GetComponentInChildren<TMP_Text>();
+                if (startLabel == null)
+                {
+                    startLabel = startButton.GetComponent<TMP_Text>();
+                }
                 if (startLabel != null)
                 {
-                    startLabel.text = "开始挑战";
+                    startLabel.text = buttonLabel;
                 }
                 startButton.onClick.AddListener(OnStartButtonClicked);
             }
@@ -135,6 +142,12 @@ namespace PacScripts
 
         // ==================== 场景跳转 ====================
 
+        // 缓存主菜单场景中的 Canvas 和 Camera，用于进入/退出小游戏时的切换
+        private Canvas _mainMenuCanvas;
+        private Camera _mainMenuCamera;
+        /// <summary>当前加载的小游戏场景名称（用于返回时卸载）</summary>
+        private string _currentMiniGameScene;
+
         /// <summary>
         /// 点击按钮后加载场景：教学模式 → 教学场景，否则 → 游戏场景
         /// </summary>
@@ -153,20 +166,152 @@ namespace PacScripts
 
             Time.timeScale = 1f;
             string target = teachingMode ? tutorialSceneName : pacmanSceneName;
+            _currentMiniGameScene = target;
 
-            // 使用 Additive 模式加载，避免销毁 VN 场景
-            // 注意：必须用 Awake 中缓存的 originalScene，不能用 gameObject.scene
-            // （因为 Jump2Pac 是 DontDestroyOnLoad，gameObject.scene 是持久场景）
-            Scene sceneToUnload = originalScene;
+            // 先隐藏主菜单面板，避免其在新场景上显示
+            MainMenuPanel mainMenuPanel = Object.FindFirstObjectByType<MainMenuPanel>();
+            if (mainMenuPanel != null)
+            {
+                mainMenuPanel.HideMe();
+            }
+
+            // 禁用主菜单的 Canvas 和 Camera，避免与迷你游戏冲突
+            Canvas[] allCanvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            foreach (Canvas c in allCanvases)
+            {
+                if (c.name == "VNGamePlayCanvas" || c.name.Contains("Canvas"))
+                {
+                    _mainMenuCanvas = c;
+                    _mainMenuCanvas.enabled = false;
+                    break;
+                }
+            }
+            Camera[] allCameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            foreach (Camera cam in allCameras)
+            {
+                if (cam.CompareTag("MainCamera") && originalScene.IsValid() &&
+                    cam.gameObject.scene == originalScene)
+                {
+                    _mainMenuCamera = cam;
+                    _mainMenuCamera.enabled = false;
+                    break;
+                }
+            }
+
+            // 使用 Additive 模式加载小游戏场景，但不卸载原 VNMainMenu 场景
+            // 保留 VNMainMenu 场景不被卸载，UIManager.Init 会复用场景中已有的 Canvas
             AsyncOperation loadOp = SceneManager.LoadSceneAsync(target, LoadSceneMode.Additive);
             loadOp.completed += (_) =>
             {
-                if (sceneToUnload.isLoaded)
+                Scene newScene = SceneManager.GetSceneByName(target);
+                if (newScene.IsValid())
                 {
-                    Debug.Log($"[Jump2Pac] 卸载原场景: {sceneToUnload.name}");
-                    SceneManager.UnloadSceneAsync(sceneToUnload);
+                    SceneManager.SetActiveScene(newScene);
                 }
+                Debug.Log($"[Jump2Pac] 小游戏场景加载完成: {target}（主菜单场景保留在后台）");
             };
+        }
+
+        /// <summary>
+        /// 从小游戏场景返回主菜单（由小游戏结束逻辑调用）
+        /// 注意：仅适用于从主菜单进入小游戏的场景；从剧情进入请使用 SceneLoader.UnloadMiniGame()
+        /// </summary>
+        public void ReturnToMainMenu()
+        {
+            // 安全检查：如果原始主菜单场景已丢失，回退到 SceneLoader
+            if (!originalScene.IsValid() || !originalScene.isLoaded)
+            {
+                Debug.LogWarning("[Jump2Pac] 原主菜单场景已丢失，回退到 SceneLoader 卸载");
+                SceneLoader.Instance?.UnloadMiniGame();
+                return;
+            }
+
+            // 确保 BGM 已停止（兜底清理）
+            IniPac.StopBGM();
+
+            // 第一步：卸载所有小游戏场景
+            int sceneCount = SceneManager.sceneCount;
+            for (int i = sceneCount - 1; i >= 0; i--)
+            {
+                Scene s = SceneManager.GetSceneAt(i);
+                if (s.isLoaded &&
+                    s.name != "DontDestroyOnLoad" &&
+                    s.path != originalScene.path &&
+                    !s.name.Contains("VNMainMenu") &&
+                    !s.name.Contains("MainMenu"))
+                {
+                    if (SceneManager.sceneCount <= 1) break;
+                    Debug.Log($"[Jump2Pac] 卸载场景: {s.name}");
+                    SceneManager.UnloadSceneAsync(s);
+                }
+            }
+
+            _currentMiniGameScene = null;
+
+            // 第二步：恢复主菜单的 Canvas
+            if (_mainMenuCanvas == null)
+            {
+                Canvas[] allCanvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (Canvas c in allCanvases)
+                {
+                    if (c.name == "VNGamePlayCanvas")
+                    {
+                        _mainMenuCanvas = c;
+                        break;
+                    }
+                }
+            }
+            if (_mainMenuCanvas != null)
+            {
+                _mainMenuCanvas.gameObject.SetActive(true);
+                _mainMenuCanvas.enabled = true;
+            }
+
+            // 第三步：恢复主菜单的 Camera
+            if (_mainMenuCamera == null)
+            {
+                Camera[] allCameras = Object.FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (Camera cam in allCameras)
+                {
+                    if (cam.CompareTag("MainCamera") && originalScene.IsValid() &&
+                        cam.gameObject.scene == originalScene)
+                    {
+                        _mainMenuCamera = cam;
+                        break;
+                    }
+                }
+            }
+            if (_mainMenuCamera != null)
+            {
+                _mainMenuCamera.enabled = true;
+            }
+
+            // 第四步：恢复主菜单面板
+            MainMenuPanel mainMenuPanel = Object.FindFirstObjectByType<MainMenuPanel>(FindObjectsInactive.Include);
+            if (mainMenuPanel != null)
+            {
+                mainMenuPanel.ShowMe();
+            }
+            else
+            {
+                Debug.LogWarning("[Jump2Pac] 未找到 MainMenuPanel，无法恢复主菜单");
+            }
+
+            // 第五步：恢复按钮状态
+            if (startLabel != null)
+            {
+                startLabel.text = buttonLabel;
+            }
+            if (startButton != null)
+            {
+                startButton.interactable = true;
+            }
+
+            // 第六步：将原主菜单场景重新设为活跃场景
+            if (originalScene.IsValid() && originalScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(originalScene);
+            }
         }
     }
 }

@@ -229,10 +229,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startButton: {fileID: 1163942355}
-  tutorialSceneName: PacTutorial3
+  buttonLabel: "\u8FDB\u5165\u6311\u6218"
+  tutorialSceneName: PacTutorial
   pacmanSceneName: Pacman
   teachingMode: 0
-  unlimitedMode: 1
+  unlimitedMode: 0
   gameTimeLimit: 60
   playerInitialMoveSpeed: 5
   playerMaxGlucose: 100

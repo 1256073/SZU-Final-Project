@@ -229,6 +229,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startButton: {fileID: 1163942355}
+  buttonLabel: "\u8FDB\u5165\u6311\u6218"
   tutorialSceneName: PacTutorial3
   pacmanSceneName: Pacman
   teachingMode: 1

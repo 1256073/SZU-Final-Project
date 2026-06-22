@@ -20,6 +20,8 @@ namespace PacScripts
         [Header("【返回剧情】")]
         /// <summary>返回剧情按钮（卸载小游戏，回到 VN）</summary>
         [SerializeField] private Button backToVNButton;
+        /// <summary>跳过按钮（与继续按钮等效，直接返回剧情/主菜单）</summary>
+        [SerializeField] private Button skipButton;
 
         // ==================== 内部状态 ====================
 
@@ -47,6 +49,12 @@ namespace PacScripts
             {
                 backToVNButton.onClick.AddListener(OnBackToVNClicked);
             }
+
+            // 绑定跳过按钮事件（与继续/返回剧情等效）
+            if (skipButton != null)
+            {
+                skipButton.onClick.AddListener(OnBackToVNClicked);
+            }
         }
 
         private void OnDestroy()
@@ -59,6 +67,10 @@ namespace PacScripts
             if (backToVNButton != null)
             {
                 backToVNButton.onClick.RemoveListener(OnBackToVNClicked);
+            }
+            if (skipButton != null)
+            {
+                skipButton.onClick.RemoveListener(OnBackToVNClicked);
             }
         }
 
@@ -104,7 +116,21 @@ namespace PacScripts
         private void OnBackToVNClicked()
         {
             Time.timeScale = 1f;
-            SceneLoader.Instance?.UnloadMiniGame();
+            IniPac.StopBGM();
+
+            // 判断进入上下文：SceneLoader.IsMiniGameRunning 为 true 表示从剧情进入
+            if (SceneLoader.Instance != null && SceneLoader.Instance.IsMiniGameRunning)
+            {
+                SceneLoader.Instance.UnloadMiniGame();
+            }
+            else if (Jump2Pac.Instance != null)
+            {
+                Jump2Pac.Instance.ReturnToMainMenu();
+            }
+            else
+            {
+                SceneLoader.Instance?.UnloadMiniGame();
+            }
         }
     }
 }
