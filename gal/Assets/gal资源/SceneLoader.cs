@@ -170,7 +170,7 @@ public class SceneLoader : MonoBehaviour
 
             // 【关键】清除 VNManager 的跨场景待处理状态，
             // 防止 OnSceneLoaded 检测到残留的 pendingScriptName 而重启游戏
-            VNManager.GetInstance()?.ClearPendingSceneState();
+            //VNManager.GetInstance().ClearPendingSceneState();
 
             AsyncOperation reloadOp = SceneManager.LoadSceneAsync(vnScenePath, LoadSceneMode.Additive);
             while (!reloadOp.isDone) yield return null;
