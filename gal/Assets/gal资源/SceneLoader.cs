@@ -25,6 +25,9 @@ public class SceneLoader : MonoBehaviour
     /// <summary>SceneLoader 自带的兜底 AudioListener（DontDestroyOnLoad，VN 场景丢失时保证始终有一个）</summary>
     private AudioListener fallbackAudioListener;
 
+    /// <summary>VN 场景中所有 Camera（用于批量禁用/恢复，防止小游戏返回后 VN 摄像机未恢复）</summary>
+    private List<Camera> vnCameras = new List<Camera>();
+
     void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
@@ -52,12 +55,13 @@ public class SceneLoader : MonoBehaviour
         }
     }
 
-    /// <summary>缓存当前 VN 场景中的所有 Canvas 和 EventSystem 引用</summary>
+    /// <summary>缓存当前 VN 场景中的所有 Canvas、EventSystem、AudioListener、Camera 引用</summary>
     private void CacheVNUIReferences()
     {
         vnCanvases.Clear();
         vnEventSystems.Clear();
         vnAudioListeners.Clear();
+        vnCameras.Clear();
 
         Scene vnScene = GetVNScene();
         if (!vnScene.isLoaded) return;
@@ -72,6 +76,9 @@ public class SceneLoader : MonoBehaviour
 
             var audioListeners = root.GetComponentsInChildren<AudioListener>(includeInactive: true);
             vnAudioListeners.AddRange(audioListeners);
+
+            var cameras = root.GetComponentsInChildren<Camera>(includeInactive: true);
+            vnCameras.AddRange(cameras);
         }
     }
 
@@ -145,6 +152,40 @@ public class SceneLoader : MonoBehaviour
         if (bgmPlayer != null)
             Destroy(bgmPlayer);
 
+        // 【Bug修复】清理 DontDestroyOnLoad 中残留的 Jump2Pac 单例
+        // Jump2Pac 使用 DontDestroyOnLoad + 单例模式，场景卸载后它的 Instance 仍然存在，
+        // 导致第二次加载同一场景时新 Jump2Pac 自我销毁，按钮引用失效
+        if (PacScripts.Jump2Pac.Instance != null)
+        {
+            var oldJump2Pac = PacScripts.Jump2Pac.Instance;
+            // 清除单例引用（避免 OnDestroy 中访问已销毁的场景对象）
+            Destroy(oldJump2Pac.gameObject);
+            Debug.Log("[SceneLoader] 已清理 DontDestroyOnLoad 中残留的 Jump2Pac");
+        }
+
+        // 【Bug修复】如果 VN 场景在小游戏过程中被意外卸载，重新加载
+        bool vnSceneLost = !GetVNScene().isLoaded;
+        if (vnSceneLost && !string.IsNullOrEmpty(vnScenePath))
+        {
+            Debug.LogWarning($"[SceneLoader] VN 场景已丢失，正在重新加载: {vnScenePath}");
+
+            // 【关键】清除 VNManager 的跨场景待处理状态，
+            // 防止 OnSceneLoaded 检测到残留的 pendingScriptName 而重启游戏
+            VNManager.GetInstance()?.ClearPendingSceneState();
+
+            AsyncOperation reloadOp = SceneManager.LoadSceneAsync(vnScenePath, LoadSceneMode.Additive);
+            while (!reloadOp.isDone) yield return null;
+            Debug.Log("[SceneLoader] VN 场景已重新加载");
+
+            // 等待一帧，让 UIManager.OnSceneLoaded 等回调先执行
+            yield return null;
+
+            // 刷新缓存：重新扫描 VN 场景中的 Canvas/EventSystem/Camera
+            CacheVNUIReferences();
+            // 再等一帧，确保 UIManager.DelayedInitGameplayUI 也执行完
+            yield return null;
+        }
+
         // 恢复 VN UI（如果 VN 场景还活着的话）
         EnableVNUI();
     }
@@ -168,6 +209,9 @@ public class SceneLoader : MonoBehaviour
                 es.gameObject.SetActive(false);
         }
 
+        // 注意：不主动禁用 VN Camera.enabled
+        // 小游戏的 Camera depth 更高会自动覆盖渲染，禁用 Camera 组件会在 URP 中丢失 Base Camera 注册
+
         // 禁用 VN 场景的 AudioListener（如果还存在）
         foreach (var al in vnAudioListeners)
         {
@@ -182,7 +226,7 @@ public class SceneLoader : MonoBehaviour
 
     private void EnableVNUI()
     {
-        // 1. 禁用所有非 VN 场景中的 Canvas、EventSystem 和 AudioListener（防止冲突）
+        // 1. 禁用所有非 VN 场景中的 Canvas、EventSystem、Camera 和 AudioListener（防止冲突）
         int sceneCount = SceneManager.sceneCount;
         for (int i = 0; i < sceneCount; i++)
         {
@@ -197,6 +241,9 @@ public class SceneLoader : MonoBehaviour
                     // 禁用 EventSystem 防止输入冲突
                     foreach (var es in root.GetComponentsInChildren<EventSystem>())
                         if (es != null) es.gameObject.SetActive(false);
+                    // 禁用 Camera 防止抢占 VN 摄像机渲染
+                    foreach (var cam in root.GetComponentsInChildren<Camera>())
+                        if (cam != null) cam.enabled = false;
                     // 禁用 AudioListener 防止出现多个 AudioListener
                     foreach (var al in root.GetComponentsInChildren<AudioListener>())
                         if (al != null) al.enabled = false;
@@ -215,7 +262,7 @@ public class SceneLoader : MonoBehaviour
         var mainMenu = Object.FindFirstObjectByType<MainMenuPanel>(FindObjectsInactive.Include);
         if (mainMenu != null) mainMenu.gameObject.SetActive(false);
 
-        // 4. 恢复 VN UI
+        // 4. 恢复 VN UI（Canvas 激活会级联激活其子节点的 Camera）
         if (mainCanvas) mainCanvas.SetActive(true);
         if (mainEventSystem) mainEventSystem.SetActive(true);
 
@@ -231,8 +278,43 @@ public class SceneLoader : MonoBehaviour
                 es.gameObject.SetActive(true);
         }
 
-        // 5. 启用兜底 AudioListener（DontDestroyOnLoad，保证始终有一个）
+        // 5. 确保 VN 场景的 Camera 处于渲染状态
+        //    VN Camera 进入小游戏时未禁用 enabled（仅 Canvas 被 SetActive），
+        //    但如果 Camera 不在 Canvas 子级下，其 enabled 应仍为 true
+        RefreshVNCameraState();
+
+        // 6. 启用兜底 AudioListener（DontDestroyOnLoad，保证始终有一个）
         if (fallbackAudioListener != null)
             fallbackAudioListener.enabled = true;
+    }
+
+    /// <summary>
+    /// 确保 VN 场景的摄像机处于可渲染状态
+    /// </summary>
+    private void RefreshVNCameraState()
+    {
+        var allCameras = Object.FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        int restored = 0;
+        foreach (var cam in allCameras)
+        {
+            if (cam == null) continue;
+
+            bool isVN = (cam.gameObject.scene.path == vnScenePath);
+            if (isVN)
+            {
+                // 如果 Camera 的 GameObject 被父级关闭连带禁用，逐级激活
+                if (!cam.gameObject.activeInHierarchy)
+                {
+                    cam.gameObject.SetActive(true);
+                }
+                // 确保 Camera 组件本身启用
+                if (!cam.enabled)
+                {
+                    cam.enabled = true;
+                }
+                restored++;
+            }
+        }
+        Debug.Log($"[SceneLoader] EnableVNUI - VN 摄像机已就绪: {restored} 个 (共检测 {allCameras.Length} 个摄像机)");
     }
 }
