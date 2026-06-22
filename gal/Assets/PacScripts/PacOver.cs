@@ -208,23 +208,99 @@ namespace PacScripts
         }
 
         /// <summary>
-        /// 重新开始游戏：显示加载中 → 恢复时间 → 重载场景
+        /// 重新开始游戏：先加载新场景，再卸载旧场景，保留 VN 主菜单场景
+        /// 此顺序可避免 Unity 的 "Unloading the last loaded scene" 错误
         /// </summary>
         public void RestartGame()
         {
             if (restartLabel != null) restartLabel.text = "加载中...";
             Time.timeScale = 1f;
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+
+            Scene currentMiniGameScene = SceneManager.GetActiveScene();
+            string sceneName = currentMiniGameScene.name;
+
+            // 先加载新场景（Additive），确保场景数 >= 2，再卸载旧场景
+            // 这样无论主菜单上下文还是剧情上下文都不会触发 "last loaded scene" 限制
+            AsyncOperation loadOp = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            if (loadOp == null)
+            {
+                Debug.LogError($"[PacOver] 无法异步加载场景: {sceneName}");
+                return;
+            }
+
+            loadOp.completed += (_) =>
+            {
+                // 找到新加载的场景（与旧场景同名但不同实例）
+                Scene newScene = default;
+                int sceneCount = SceneManager.sceneCount;
+                for (int i = 0; i < sceneCount; i++)
+                {
+                    Scene s = SceneManager.GetSceneAt(i);
+                    if (s.isLoaded && s.name == sceneName && s.handle != currentMiniGameScene.handle)
+                    {
+                        newScene = s;
+                        break;
+                    }
+                }
+
+                // 卸载旧的小游戏场景
+                if (currentMiniGameScene.isLoaded)
+                {
+                    AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentMiniGameScene);
+                    if (unloadOp == null)
+                    {
+                        Debug.LogWarning($"[PacOver] 无法卸载旧场景: {sceneName}（可能已是唯一场景）");
+                    }
+                }
+
+                // 设置新场景为活跃
+                if (newScene.IsValid() && newScene.isLoaded)
+                {
+                    SceneManager.SetActiveScene(newScene);
+                }
+                else
+                {
+                    // 兜底：按名称查找
+                    newScene = SceneManager.GetSceneByName(sceneName);
+                    if (newScene.IsValid() && newScene.isLoaded)
+                    {
+                        SceneManager.SetActiveScene(newScene);
+                    }
+                    else
+                    {
+                        Debug.LogError($"[PacOver] 重新加载场景失败: {sceneName}");
+                    }
+                }
+            };
         }
 
         /// <summary>
-        /// 返回剧情：恢复时间流速，卸载小游戏场景，回到 VN
+        /// 返回剧情/主菜单：根据进入上下文自动选择正确的返回路径
         /// </summary>
         public void BackToVN()
         {
             Time.timeScale = 1f;
             IniPac.StopBGM();
-            SceneLoader.Instance?.UnloadMiniGame();
+
+            // 判断进入上下文：
+            // - SceneLoader.IsMiniGameRunning = true  → 是从剧情中进入的，走 SceneLoader 返回
+            // - SceneLoader.IsMiniGameRunning = false → 是从主菜单进入的，走 Jump2Pac 返回
+            if (SceneLoader.Instance != null && SceneLoader.Instance.IsMiniGameRunning)
+            {
+                // 剧情上下文：使用 SceneLoader 卸载，自动推进剧情
+                SceneLoader.Instance.UnloadMiniGame();
+            }
+            else if (Jump2Pac.Instance != null)
+            {
+                // 主菜单上下文：使用 Jump2Pac 返回主菜单
+                Jump2Pac.Instance.ReturnToMainMenu();
+            }
+            else
+            {
+                // 兜底
+                Debug.LogWarning("[PacOver] 无法确定返回路径，尝试 SceneLoader");
+                SceneLoader.Instance?.UnloadMiniGame();
+            }
         }
 
         // ==================== 分数计算 ====================

@@ -39,7 +39,7 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1036,Me,,,,,废话少说，直接端上来罢,,,,,
 1037,神,,,神_love,,哦Boy，You现在很主动嘛,,,,,
 1038,Me,,,,,才没有啦！,,,,,
-1039,hide,,,,,,,,,choice(进入神明的挑战|jump_pacman(Jump2Pac2)),进入挑战（难度level3）
+1039,,,,,,,,,,,进入挑战（难度level3）
 1040,神,,,神_normal,,Good job！Boy,,胜利,,,
 1041,Me,,,,,哼，这种程度绰绰有余啦！,,,,,
 1042,神,,,神_love,,Boy，You现在可以向Me索取Bonus了,,,,,

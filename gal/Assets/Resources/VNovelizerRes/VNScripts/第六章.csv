@@ -31,7 +31,7 @@ ID,Speaker,HeadProfile,CharLeft,CharMid,CharRight,Text,Background,BGM,Voice,Comm
 1029,hide,,,,,刚刚一直在挑衅我吗,,,,,
 1030,Me,,,,,这次怎么不是我来许愿了,,,,,
 1031,神,,,神_normal,,嗯？因为这里是Me的领域，能随心所欲的是Me，哈哈哈哈~,,,,,
-1032,hide,,,,,,,,,choice(进入神明的挑战|jump_pacman(Jump2Pac3)),进入挑战（难度level2）
+1032,hide,,,,,,,,,,进入挑战（难度level2）
 1033,神,,,神_normal,,这种程度对You来说轻而易举吧Boy,,胜利,,,
 1034,hide,,,,,难道他真是好神？,,,,,
 1035,神,,,神_love,,......,,,,,

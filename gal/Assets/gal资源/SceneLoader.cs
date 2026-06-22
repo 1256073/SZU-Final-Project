@@ -152,19 +152,18 @@ public class SceneLoader : MonoBehaviour
         if (bgmPlayer != null)
             Destroy(bgmPlayer);
 
-        // 【Bug修复】清理 DontDestroyOnLoad 中残留的 Jump2Pac 单例
-        // Jump2Pac 使用 DontDestroyOnLoad + 单例模式，场景卸载后它的 Instance 仍然存在，
-        // 导致第二次加载同一场景时新 Jump2Pac 自我销毁，按钮引用失效
-        if (PacScripts.Jump2Pac.Instance != null)
-        {
-            var oldJump2Pac = PacScripts.Jump2Pac.Instance;
-            // 清除单例引用（避免 OnDestroy 中访问已销毁的场景对象）
-            Destroy(oldJump2Pac.gameObject);
-            Debug.Log("[SceneLoader] 已清理 DontDestroyOnLoad 中残留的 Jump2Pac");
-        }
-
         // 【Bug修复】如果 VN 场景在小游戏过程中被意外卸载，重新加载
         bool vnSceneLost = !GetVNScene().isLoaded;
+
+        // 【修复】仅当 VN 场景确实丢失时才清理 Jump2Pac 单例
+        // 如果 VN 场景保持加载（Jump2Pac 的新行为：不再卸载 VNMainMenu），
+        // Jump2Pac 仍然有效且按钮引用正确，不应被销毁。
+        if (vnSceneLost && PacScripts.Jump2Pac.Instance != null)
+        {
+            var oldJump2Pac = PacScripts.Jump2Pac.Instance;
+            Destroy(oldJump2Pac.gameObject);
+            Debug.Log("[SceneLoader] VN 场景丢失，已清理 DontDestroyOnLoad 中残留的 Jump2Pac");
+        }
         if (vnSceneLost && !string.IsNullOrEmpty(vnScenePath))
         {
             Debug.LogWarning($"[SceneLoader] VN 场景已丢失，正在重新加载: {vnScenePath}");
