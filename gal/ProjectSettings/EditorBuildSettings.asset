@@ -6,11 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/VNGamePlay.unity
-    guid: 4e1c7a2573c001b409824182af3e2682
-  - enabled: 1
     path: Assets/Scenes/VNMainMenu.unity
     guid: 889e0008d10fe5a4ea1f7996cd4a4ac3
+  - enabled: 1
+    path: Assets/Scenes/VNGamePlay.unity
+    guid: 4e1c7a2573c001b409824182af3e2682
   - enabled: 1
     path: Assets/Scenes/VNDebugScene.unity
     guid: 34b071fd13b1b9147ae29b666f5bea24
