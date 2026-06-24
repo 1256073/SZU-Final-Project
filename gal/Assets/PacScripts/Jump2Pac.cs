@@ -104,6 +104,9 @@ namespace PacScripts
 
         private void Awake()
         {
+            // 【Bug修复】确保是根节点，避免 DontDestroyOnLoad 报错
+            transform.SetParent(null);
+
             // 必须在 DontDestroyOnLoad 之前缓存原始场景
             // （DontDestroyOnLoad 会将对象移到持久场景，gameObject.scene 会变）
             originalScene = gameObject.scene;
@@ -111,8 +114,16 @@ namespace PacScripts
             // 单例模式：确保全局唯一，且场景切换时不销毁
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
-                return;
+                // 【Bug修复】检测旧单例的 originalScene 是否已卸载，若是则销毁旧单例
+                if (Instance.originalScene.IsValid() && !Instance.originalScene.isLoaded)
+                {
+                    Destroy(Instance.gameObject);
+                }
+                else
+                {
+                    Destroy(gameObject);
+                    return;
+                }
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);

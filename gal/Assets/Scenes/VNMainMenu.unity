@@ -189,6 +189,7 @@ GameObject:
   m_Component:
   - component: {fileID: 880550191}
   - component: {fileID: 880550192}
+  - component: {fileID: 880550193}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -223,6 +224,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db12808531d634240a913f16e29cdd67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: VNovelizer.Runtime::VNTest
+--- !u!114 &880550193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880550190}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3da90e98a4b9c474a805aa7522d88daf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1033265126
 GameObject:
   m_ObjectHideFlags: 0

@@ -395,7 +395,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u753B\u5ECA"
+  m_text: "\u5C0F\u6E38\u620F"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 468476da4f17403409c59df4679bedb5, type: 2}
   m_sharedMaterial: {fileID: 5532235628371915160, guid: 468476da4f17403409c59df4679bedb5, type: 2}
@@ -732,7 +732,7 @@ GameObject:
   - component: {fileID: 7981320031181084417}
   - component: {fileID: 3918161314417619225}
   m_Layer: 5
-  m_Name: GalleryBtn
+  m_Name: MiniGame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -851,6 +851,7 @@ GameObject:
   - component: {fileID: 2879005566167710122}
   - component: {fileID: 8665119457261879892}
   - component: {fileID: 1718147889373850654}
+  - component: {fileID: 7110601282702593358}
   m_Layer: 5
   m_Name: MainMenuPanel
   m_TagString: Untagged
@@ -901,9 +902,45 @@ MonoBehaviour:
   m_EditorClassIdentifier: VNovelizer.Runtime::MainMenuPanel
   newGameBtn: {fileID: 1184489831256617683}
   loadGameBtn: {fileID: 705204161542575502}
-  galleryBtn: {fileID: 3918161314417619225}
+  galleryBtn: {fileID: 0}
   settingsBtn: {fileID: 5329105115648497584}
   quitBtn: {fileID: 4224521092017171698}
+--- !u!114 &7110601282702593358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6878476154385271820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 577d2ba19495b9c46a2d23b8cb38ca1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startButton: {fileID: 3918161314417619225}
+  buttonLabel: "\u5C0F\u6E38\u620F"
+  tutorialSceneName: Tutorial
+  pacmanSceneName: Pacman
+  teachingMode: 0
+  unlimitedMode: 1
+  gameTimeLimit: 120
+  playerInitialMoveSpeed: 5
+  playerMaxGlucose: 100
+  enemyInitialMoveSpeed: 2
+  enemySpeedGrowth: 0.1
+  enemyPrefabs:
+  - {fileID: 4139550769376307926, guid: 4a0780fd9b11cbb4a85aeab75eccd16e, type: 3}
+  - {fileID: 8134565659959845585, guid: 9a9e350c4a0d9e64abc818b34351d35a, type: 3}
+  - {fileID: 1273746299068102033, guid: 67b0a630446877e4f94dbb9f1ec22b30, type: 3}
+  enemySpawnInterval: 3
+  itemPrefabs:
+  - {fileID: 2497794514426951475, guid: 38c13be9920b4354588b8abbf75542f0, type: 3}
+  - {fileID: 8738678971932556325, guid: 60cdeeaec59d7c449b085109a1822d15, type: 3}
+  - {fileID: 7956210925210306207, guid: 5288a33399f4cc64f815c903fbe65d88, type: 3}
+  itemSpawnInterval: 1
+  wallMoveCycle: 3
+  wallHorizontalRange: 3
+  wallVerticalRange: 3
 --- !u!1 &7165354157510179808
 GameObject:
   m_ObjectHideFlags: 0

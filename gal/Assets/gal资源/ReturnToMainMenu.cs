@@ -3,20 +3,43 @@ using UnityEngine.SceneManagement;
 
 public class ReturnToMainMenu : MonoBehaviour
 {
-    // ÔÚ Inspector Àï¿ÉÖ¸¶¨Ä¿±ê³¡¾°Ãû£¬Ä¬ÈÏ "MainMenu"
+    // åœ¨ Inspector ä¸­æŒ‡å®šç›®æ ‡åœºæ™¯åç§°ï¼Œé»˜è®¤ "VNMainMenu"
     public string targetSceneName = "VNMainMenu";
 
     public void GoToMainMenu()
     {
-        // Èç¹û´æÔÚ²ĞÁôµÄÈ«¾Ö UI£¨DontDestroyOnLoad£©£¬¿ÉÒÔÒş²ØËüÃÇ
+        // é‡ç½®æ¡†æ¶çŠ¶æ€ï¼Œé˜²æ­¢çŠ¶æ€æ±¡æŸ“
+        ResetFrameworkState();
+
+        // éšè—æ‰€æœ‰ DontDestroyOnLoad ä¸­çš„ Canvasï¼Œé¿å…æ®‹ç•™ UI
         HidePersistentUI();
 
         SceneManager.LoadScene(targetSceneName);
     }
 
+    /// <summary>
+    /// é‡ç½® VNovelizer æ¡†æ¶çŠ¶æ€
+    /// </summary>
+    private void ResetFrameworkState()
+    {
+        // é‡ç½® GameStateManager
+        var gsm = GameStateManager.GetInstance();
+        if (gsm != null)
+        {
+            gsm.ResetToMainMenu();
+        }
+
+        // é‡ç½® VNManager
+        var vnManager = VNManager.GetInstance();
+        if (vnManager != null)
+        {
+            vnManager.ResetForMainMenu();
+        }
+    }
+
     private void HidePersistentUI()
     {
-        // »ñÈ¡ DontDestroyOnLoad ³¡¾°£¬Ö»½ûÓÃ Canvas£¬¾ø²»¶¯ÆäËû¹ÜÀíÆ÷
+        // è·å– DontDestroyOnLoad åœºæ™¯ï¼Œåªéšè— Canvas ç›¸å…³å¯¹è±¡
         GameObject temp = new GameObject();
         DontDestroyOnLoad(temp);
         Scene dontDestroyScene = temp.scene;
@@ -24,13 +47,11 @@ public class ReturnToMainMenu : MonoBehaviour
 
         foreach (GameObject rootObj in dontDestroyScene.GetRootGameObjects())
         {
-            // Ö»´¦Àí¹ÒÓĞ Canvas µÄÎïÌå£¨ËüÃÇÊÇ UI ¸ù£©
+            // åªéšè—æœ‰ Canvas ç»„ä»¶çš„å¯¹è±¡ï¼ˆé¿å…å½±å“é UI çš„ DontDestroyOnLoad å¯¹è±¡ï¼‰
             if (rootObj.GetComponent<Canvas>() != null)
             {
                 rootObj.SetActive(false);
             }
-            // Èç¹ûÄãÈ·¶¨Ö÷½çÃæĞèÒªÈ«ĞÂµÄ EventSystem£¬Ò²¿ÉÒÔ½ûÓÃ¾ÉµÄ EventSystem
-            // µ«ÒªÈ·±£Ö÷½çÃæ³¡¾°×Ô´ø EventSystem
         }
     }
 }
