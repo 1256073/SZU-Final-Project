@@ -88,7 +88,19 @@ namespace PacScripts
         public float WallHorizontalRange => wallHorizontalRange;
         public float WallVerticalRange => wallVerticalRange;
 
-        // ==================== Unity 生命周期 ====================
+        // ==================== 回合计时 ====================
+
+        /// <summary>当前回合的开始时间（由 PacOver 在游戏开始时设置）</summary>
+        public float RoundStartTime { get; set; } = 0f;
+
+        /// <summary>当前回合已进行时间（秒），替代 Time.timeSinceLevelLoad 避免场景重载时计时不重置</summary>
+        public float RoundElapsedTime => Time.time - RoundStartTime;
+
+        /// <summary>重置回合计时器（新游戏/重新游戏时调用）</summary>
+        public void ResetRoundTimer()
+        {
+            RoundStartTime = Time.time;
+        }
 
         private void Awake()
         {

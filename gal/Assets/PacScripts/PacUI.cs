@@ -79,6 +79,7 @@ namespace PacScripts
             if (targetCamera != null)
             {
                 defaultOrthoSize = targetCamera.orthographicSize;
+                zoomStartSize    = targetCamera.orthographicSize;
                 defaultCameraPos = targetCamera.transform.position;
                 cameraZOffset    = defaultCameraPos.z;
             }
@@ -217,7 +218,7 @@ namespace PacScripts
         private void RefreshEnemySpeed()
         {
             if (enemySpeedText == null || config == null) return;
-            float spd = config.EnemyInitialMoveSpeed + Time.timeSinceLevelLoad * config.EnemySpeedGrowth;
+            float spd = config.EnemyInitialMoveSpeed + config.RoundElapsedTime * config.EnemySpeedGrowth;
             enemySpeedText.text = "敌人速度\n" + spd.ToString("F1");
         }
 

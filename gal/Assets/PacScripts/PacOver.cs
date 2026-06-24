@@ -70,6 +70,12 @@ namespace PacScripts
             // 游戏开始时：确保正常时间流速
             Time.timeScale = 1f;
 
+            // 重置回合计时器（修复重新游戏时敌人速度不重置的问题）
+            if (config != null)
+            {
+                config.ResetRoundTimer();
+            }
+
             // 隐藏结算界面
             if (settlementCanvas != null)
             {
@@ -185,20 +191,23 @@ namespace PacScripts
 
         /// <summary>
         /// 判定胜负并播放音效：
-        /// 普通模式：倒计时结束=成功，敌人抓到=失败
-        /// 无尽模式：消化糖分=0=失败，否则=成功
+        /// 无限模式：碰到敌人结算，消化糖分=0=失败，消化糖分&gt;0=成功
+        /// 普通模式（含教学）：时间到/碰到敌人结算，碰到敌人/消化糖分=0=失败，其余=成功
         /// </summary>
         private void PlayResultSound()
         {
             bool isSuccess;
+            float digested = pacman != null ? pacman.DigestedGlucose : 0f;
+
             if (config != null && config.UnlimitedMode)
             {
-                float digested = pacman != null ? pacman.DigestedGlucose : 0f;
+                // 无限模式：消化糖分=0 失败，否则成功
                 isSuccess = digested > 0f;
             }
             else
             {
-                isSuccess = !causedByEnemy;
+                // 普通模式（含教学）：碰到敌人 或 消化糖分=0 判定失败
+                isSuccess = !causedByEnemy && digested > 0f;
             }
 
             if (isSuccess)
@@ -215,6 +224,27 @@ namespace PacScripts
         {
             if (restartLabel != null) restartLabel.text = "加载中...";
             Time.timeScale = 1f;
+
+            // 销毁旧场景的玩家和敌人，避免残留碰撞体阻挡新玩家
+            if (pacman != null)
+            {
+                // 禁用碰撞体后再销毁，防止销毁过程中触发碰撞回调
+                Collider2D col = pacman.GetComponent<Collider2D>();
+                if (col != null) col.enabled = false;
+                Destroy(pacman.gameObject);
+                pacman = null;
+            }
+            // 销毁所有旧敌人
+            Enemy[] oldEnemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+            foreach (Enemy e in oldEnemies)
+            {
+                if (e != null && e.gameObject != null)
+                {
+                    Collider2D col = e.GetComponent<Collider2D>();
+                    if (col != null) col.enabled = false;
+                    Destroy(e.gameObject);
+                }
+            }
 
             Scene currentMiniGameScene = SceneManager.GetActiveScene();
             string sceneName = currentMiniGameScene.name;

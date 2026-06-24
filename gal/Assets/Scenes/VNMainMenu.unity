@@ -397,7 +397,7 @@ MonoBehaviour:
   - {fileID: 2497794514426951475, guid: 38c13be9920b4354588b8abbf75542f0, type: 3}
   - {fileID: 8738678971932556325, guid: 60cdeeaec59d7c449b085109a1822d15, type: 3}
   - {fileID: 7956210925210306207, guid: 5288a33399f4cc64f815c903fbe65d88, type: 3}
-  itemSpawnInterval: 3
+  itemSpawnInterval: 1
   wallMoveCycle: 3
   wallHorizontalRange: 3
   wallVerticalRange: 3

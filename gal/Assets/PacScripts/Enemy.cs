@@ -75,7 +75,7 @@ namespace PacScripts
         {
             var cfg = Jump2Pac.Instance;
             if (cfg == null) return 0f;
-            float s = (cfg.EnemyInitialMoveSpeed + Time.timeSinceLevelLoad * cfg.EnemySpeedGrowth) * speedVar;
+            float s = (cfg.EnemyInitialMoveSpeed + cfg.RoundElapsedTime * cfg.EnemySpeedGrowth) * speedVar;
             return s < 0f ? 0f : s;
         }
 
