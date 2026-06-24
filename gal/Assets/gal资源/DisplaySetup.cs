@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// 显示设置初始化脚本
 /// - 将相机背景色设为黑色（替代默认蓝边）
-/// - 确保使用窗口模式（可通过Windows控件最大化），禁止全屏
 /// - 允许窗口缩放
 /// </summary>
 public static class DisplaySetup
@@ -14,9 +13,6 @@ public static class DisplaySetup
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void OnBeforeSceneLoad()
     {
-        // 强制窗口模式，禁止全屏（用户可通过Windows控件最大化）
-        Screen.fullScreenMode = FullScreenMode.Windowed;
-
         if (!isInitialized)
         {
             SceneManager.sceneLoaded += OnSceneLoaded;

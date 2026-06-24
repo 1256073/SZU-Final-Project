@@ -140,13 +140,13 @@ namespace PacScripts
                 player.ClearGlucose();
             }
 
-            // 播放拾取音效
+            // 播放拾取音效（音量受 SFX 设置控制）
             if (pickupSound != null)
             {
                 GameObject sfxObj = new GameObject("ItemPickup_SFX");
                 AudioSource src = sfxObj.AddComponent<AudioSource>();
                 src.spatialBlend = 0f;
-                src.volume = 1f;
+                src.volume = IniPac.GetSFXVolume();
                 src.PlayOneShot(pickupSound);
                 Destroy(sfxObj, pickupSound.length + 0.1f);
             }

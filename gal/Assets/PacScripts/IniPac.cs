@@ -79,6 +79,9 @@ namespace PacScripts
             // 确保游戏以正常速度运行
             Time.timeScale = 1f;
 
+            // 0. 从 VN 全局设置同步音量
+            SyncVolumeFromGlobalData();
+
             // 1. 在整数坐标网格生成糖分
             GenerateInitialGlucose();
 
@@ -266,10 +269,11 @@ namespace PacScripts
             s_successSound = successSound;
             s_failureSound = failureSound;
 
-            // 已有 BGM：恢复满音量并确保播放中
+            // 已有 BGM：读取 VN 音量设置
             if (bgmAudioSource != null)
             {
-                bgmAudioSource.volume = 1f;
+                var data = GlobalDataManager.GetInstance()?.GetGlobalData();
+                bgmAudioSource.volume = data != null ? data.BGMVolume * data.MasterVolume : 1f;
                 if (!bgmAudioSource.isPlaying)
                     bgmAudioSource.UnPause();
                 return;
@@ -284,56 +288,96 @@ namespace PacScripts
             DontDestroyOnLoad(bgmObj);
             bgmAudioSource = bgmObj.AddComponent<AudioSource>();
             bgmAudioSource.clip = bgmClip;
-            bgmAudioSource.volume = 1f;
+            var data2 = GlobalDataManager.GetInstance()?.GetGlobalData();
+            bgmAudioSource.volume = data2 != null ? data2.BGMVolume * data2.MasterVolume : 1f;
             bgmAudioSource.loop = true;
             bgmAudioSource.Play();
         }
 
         /// <summary>
-        /// 降低 BGM 音量（游戏结算时调用，BGM 继续播放不暂停）
+        /// 降低 BGM 音量（游戏结算/暂停时调用，音量 = 正常音量 × LowMultiplier）
         /// </summary>
         public static void LowerBGMVolume()
         {
             if (bgmAudioSource != null && bgmAudioSource.isPlaying)
-                bgmAudioSource.volume = 1f * s_bgmLowMultiplier;
+            {
+                var data = GlobalDataManager.GetInstance()?.GetGlobalData();
+                float baseVol = data != null ? data.BGMVolume * data.MasterVolume : 1f;
+                bgmAudioSource.volume = baseVol * s_bgmLowMultiplier;
+            }
         }
 
         /// <summary>
-        /// 恢复 BGM 满音量（从暂停恢复时调用）
+        /// 恢复 BGM 正常音量（从 GlobalData 读取）
         /// </summary>
         public static void RestoreBGMVolume()
         {
             if (bgmAudioSource != null)
-                bgmAudioSource.volume = 1f;
+            {
+                var data = GlobalDataManager.GetInstance()?.GetGlobalData();
+                bgmAudioSource.volume = data != null ? data.BGMVolume * data.MasterVolume : 1f;
+            }
         }
 
         /// <summary>
-        /// 播放成功音效（2D，不受摄像机距离影响）
+        /// 从 VN 全局设置同步音量到小游戏
+        /// </summary>
+        private static void SyncVolumeFromGlobalData()
+        {
+            var data = GlobalDataManager.GetInstance()?.GetGlobalData();
+            if (data == null) return;
+            AudioListener.volume = data.MasterVolume;
+            if (bgmAudioSource != null)
+                bgmAudioSource.volume = data.BGMVolume * data.MasterVolume;
+        }
+
+        /// <summary>获取当前 BGM 实际音量（供外部保存/恢复）</summary>
+        public static float GetCurrentBGMVolume()
+        {
+            return bgmAudioSource != null ? bgmAudioSource.volume : 1f;
+        }
+
+        /// <summary>直接设置 BGM 音量（供暂停面板滑块使用）</summary>
+        public static void SetBGMVolume(float vol)
+        {
+            if (bgmAudioSource != null)
+                bgmAudioSource.volume = vol;
+        }
+
+        /// <summary>获取当前音效实际音量（主音量 × SFX 音量）</summary>
+        public static float GetSFXVolume()
+        {
+            var data = GlobalDataManager.GetInstance()?.GetGlobalData();
+            return data != null ? data.SFXVolume * data.MasterVolume : 1f;
+        }
+
+        /// <summary>
+        /// 播放成功音效（2D，不受摄像机距离影响，音量受 SFX 设置控制）
         /// </summary>
         public static void PlaySuccessSound()
         {
             if (s_successSound != null)
-                PlayOneShot2D(s_successSound);
+                PlayOneShot2D(s_successSound, GetSFXVolume());
         }
 
         /// <summary>
-        /// 播放失败音效（2D，不受摄像机距离影响）
+        /// 播放失败音效（2D，不受摄像机距离影响，音量受 SFX 设置控制）
         /// </summary>
         public static void PlayFailureSound()
         {
             if (s_failureSound != null)
-                PlayOneShot2D(s_failureSound);
+                PlayOneShot2D(s_failureSound, GetSFXVolume());
         }
 
         /// <summary>
-        /// 以 2D 模式播放一次性音效，确保 100% 可听见
+        /// 以 2D 模式播放一次性音效
         /// </summary>
-        private static void PlayOneShot2D(AudioClip clip)
+        private static void PlayOneShot2D(AudioClip clip, float volume)
         {
             GameObject sfxObj = new GameObject("SFX_OneShot");
             AudioSource src = sfxObj.AddComponent<AudioSource>();
-            src.spatialBlend = 0f; // 2D，不受距离衰减
-            src.volume = 1f;
+            src.spatialBlend = 0f;
+            src.volume = volume;
             src.PlayOneShot(clip);
             Destroy(sfxObj, clip.length + 0.1f);
         }
