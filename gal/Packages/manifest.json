@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.fakecorps.vnovelizer": "https://github.com/Fakecorps/VNovelizer.git",
+    "com.fakecorps.vnovelizer": "file:com.fakecorps.vnovelizer",
     "com.kyrylokuzyk.primetween": "1.4.0",
     "com.unity.collab-proxy": "2.12.4",
     "com.unity.feature.2d": "2.0.1",

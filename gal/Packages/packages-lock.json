@@ -1,15 +1,14 @@
 {
   "dependencies": {
     "com.fakecorps.vnovelizer": {
-      "version": "https://github.com/Fakecorps/VNovelizer.git",
+      "version": "file:com.fakecorps.vnovelizer",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.textmeshpro": "3.0.6",
         "com.unity.inputsystem": "1.7.0",
         "com.unity.localization": "1.5.2"
-      },
-      "hash": "e3c2998e61673c1c5e014578a99e297e10864821"
+      }
     },
     "com.kyrylokuzyk.primetween": {
       "version": "1.4.0",
