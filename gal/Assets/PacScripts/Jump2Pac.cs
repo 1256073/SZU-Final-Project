@@ -191,6 +191,9 @@ namespace PacScripts
             string target = teachingMode ? tutorialSceneName : pacmanSceneName;
             _currentMiniGameScene = target;
 
+            // 暂停主菜单 BGM
+            MainMenuBGM.Pause();
+
             // 先隐藏主菜单面板，避免其在新场景上显示
             MainMenuPanel mainMenuPanel = Object.FindFirstObjectByType<MainMenuPanel>();
             if (mainMenuPanel != null)
@@ -251,6 +254,9 @@ namespace PacScripts
 
             // 确保 BGM 已停止（兜底清理）
             IniPac.StopBGM();
+
+            // 恢复主菜单 BGM
+            MainMenuBGM.Resume();
 
             // 第一步：卸载所有小游戏场景
             int sceneCount = SceneManager.sceneCount;

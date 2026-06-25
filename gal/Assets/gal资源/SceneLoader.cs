@@ -24,6 +24,8 @@ public class SceneLoader : MonoBehaviour
     private List<EventSystem> vnEventSystems = new List<EventSystem>();
     /// <summary>VN 场景中所有 AudioListener（进入小游戏时禁用，防止多 AudioListener）</summary>
     private List<AudioListener> vnAudioListeners = new List<AudioListener>();
+    /// <summary>VN 场景中所有 AudioSource（进入小游戏时暂停，防止剧情 BGM 继续播放）</summary>
+    private List<AudioSource> vnAudioSources = new List<AudioSource>();
     /// <summary>SceneLoader 自带的兜底 AudioListener（DontDestroyOnLoad，VN 场景丢失时保证始终有一个）</summary>
     private AudioListener fallbackAudioListener;
 
@@ -97,6 +99,7 @@ public class SceneLoader : MonoBehaviour
         vnCanvases.Clear();
         vnEventSystems.Clear();
         vnAudioListeners.Clear();
+        vnAudioSources.Clear();
         vnCameras.Clear();
 
         Scene vnScene = GetVNScene();
@@ -112,6 +115,9 @@ public class SceneLoader : MonoBehaviour
 
             var audioListeners = root.GetComponentsInChildren<AudioListener>(includeInactive: true);
             vnAudioListeners.AddRange(audioListeners);
+
+            var audioSources = root.GetComponentsInChildren<AudioSource>(includeInactive: true);
+            vnAudioSources.AddRange(audioSources);
 
             var cameras = root.GetComponentsInChildren<Camera>(includeInactive: true);
             vnCameras.AddRange(cameras);
@@ -332,6 +338,13 @@ public class SceneLoader : MonoBehaviour
         // 禁用兜底 AudioListener，让小游戏独占
         if (fallbackAudioListener != null)
             fallbackAudioListener.enabled = false;
+
+        // 暂停 VN 场景所有 AudioSource（停止剧情 BGM）
+        foreach (var src in vnAudioSources)
+        {
+            if (src != null && src.isPlaying)
+                src.Pause();
+        }
     }
 
     private void EnableVNUI()
@@ -382,7 +395,14 @@ public class SceneLoader : MonoBehaviour
         //    但如果 Camera 不在 Canvas 子级下，其 enabled 应仍为 true
         RefreshVNCameraState();
 
-        // 6. 启用兜底 AudioListener（DontDestroyOnLoad，保证始终有一个）
+        // 6. 恢复 VN 场景所有 AudioSource（恢复剧情 BGM）
+        foreach (var src in vnAudioSources)
+        {
+            if (src != null && src.clip != null)
+                src.UnPause();
+        }
+
+        // 7. 启用兜底 AudioListener（DontDestroyOnLoad，保证始终有一个）
         if (fallbackAudioListener != null)
             fallbackAudioListener.enabled = true;
 
