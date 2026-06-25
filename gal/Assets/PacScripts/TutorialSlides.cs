@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections;
 
 namespace PacScripts
 {
@@ -80,11 +81,54 @@ namespace PacScripts
             if (currentIndex >= slides.Length - 1)
             {
                 if (mainLabel != null) mainLabel.text = "加载中...";
-                SceneManager.LoadScene(gameSceneName);
+                StartCoroutine(LoadGameScene());
                 return;
             }
 
             ShowSlide(currentIndex + 1);
+        }
+
+        // Keep the VN scene loaded when the tutorial was opened from story mode.
+        private IEnumerator LoadGameScene()
+        {
+            if (mainButton != null) mainButton.interactable = false;
+            if (autoButton != null) autoButton.interactable = false;
+
+            Time.timeScale = 1f;
+
+            Scene tutorialScene = gameObject.scene;
+            Scene existingGameScene = SceneManager.GetSceneByName(gameSceneName);
+            if (!existingGameScene.IsValid() || !existingGameScene.isLoaded)
+            {
+                AsyncOperation loadOp = SceneManager.LoadSceneAsync(gameSceneName, LoadSceneMode.Additive);
+                if (loadOp == null)
+                {
+                    Debug.LogError($"TutorialSlides: failed to load scene {gameSceneName}");
+                    yield break;
+                }
+
+                while (!loadOp.isDone)
+                    yield return null;
+            }
+
+            Scene gameScene = SceneManager.GetSceneByName(gameSceneName);
+            if (gameScene.IsValid() && gameScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(gameScene);
+            }
+
+            if (tutorialScene.IsValid() &&
+                tutorialScene.isLoaded &&
+                tutorialScene.name != gameSceneName &&
+                SceneManager.sceneCount > 1)
+            {
+                AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(tutorialScene);
+                if (unloadOp != null)
+                {
+                    while (!unloadOp.isDone)
+                        yield return null;
+                }
+            }
         }
 
         /// <summary>自动翻页：到最后一张时停止自动并隐藏自动按钮</summary>

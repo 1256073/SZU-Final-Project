@@ -30,6 +30,12 @@ namespace PacScripts
         /// <summary>返回剧情按钮（卸载小游戏，回到 VN）</summary>
         [SerializeField] private Button backToVNButton;
 
+        [Header("【最大分数（仅无限模式）】")]
+        /// <summary>最大分数展示文本</summary>
+        [SerializeField] private TMP_Text maxScoreText;
+        /// <summary>清空最大分数记录的按钮</summary>
+        [SerializeField] private Button clearMaxScoreButton;
+
         // ==================== 内部状态 ====================
 
         private float elapsedTime = 0f;
@@ -108,6 +114,15 @@ namespace PacScripts
             {
                 backToVNButton.onClick.AddListener(BackToVN);
             }
+
+            // 绑定清空最大分数按钮
+            if (clearMaxScoreButton != null)
+            {
+                clearMaxScoreButton.onClick.AddListener(ClearMaxScore);
+            }
+
+            // 无限模式下展示历史最大分数（进入游戏时就显示）
+            RefreshMaxScoreDisplay();
         }
 
         private void Update()
@@ -144,6 +159,10 @@ namespace PacScripts
             if (backToVNButton != null)
             {
                 backToVNButton.onClick.RemoveListener(BackToVN);
+            }
+            if (clearMaxScoreButton != null)
+            {
+                clearMaxScoreButton.onClick.RemoveListener(ClearMaxScore);
             }
         }
 
@@ -360,6 +379,50 @@ namespace PacScripts
             {
                 finalScoreText.text = "最终分数：" + finalScore.ToString("F1");
             }
+
+            // 无限模式：记录并展示最大分数
+            if (config != null && config.UnlimitedMode)
+            {
+                float savedMax = PlayerPrefs.GetFloat("PacMaxScore", 0f);
+                if (finalScore > savedMax)
+                {
+                    PlayerPrefs.SetFloat("PacMaxScore", finalScore);
+                    PlayerPrefs.Save();
+                }
+                RefreshMaxScoreDisplay();
+            }
+        }
+
+        // ==================== 最大分数 ====================
+
+        /// <summary>刷新最大分数显示（仅无限模式时有效）</summary>
+        private void RefreshMaxScoreDisplay()
+        {
+            if (maxScoreText == null) return;
+
+            if (config != null && config.UnlimitedMode)
+            {
+                float savedMax = PlayerPrefs.GetFloat("PacMaxScore", 0f);
+                maxScoreText.text = "最大分数：" + savedMax.ToString("F1");
+                maxScoreText.gameObject.SetActive(true);
+                if (clearMaxScoreButton != null)
+                    clearMaxScoreButton.gameObject.SetActive(true);
+            }
+            else
+            {
+                // 非无限模式隐藏最大分数及相关按钮
+                maxScoreText.gameObject.SetActive(false);
+                if (clearMaxScoreButton != null)
+                    clearMaxScoreButton.gameObject.SetActive(false);
+            }
+        }
+
+        /// <summary>清空最大分数记录</summary>
+        public void ClearMaxScore()
+        {
+            PlayerPrefs.DeleteKey("PacMaxScore");
+            PlayerPrefs.Save();
+            RefreshMaxScoreDisplay();
         }
     }
 }

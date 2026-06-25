@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class SceneLoader : MonoBehaviour
 {
@@ -27,10 +29,25 @@ public class SceneLoader : MonoBehaviour
 
     /// <summary>VN 场景中所有 Camera（用于批量禁用/恢复，防止小游戏返回后 VN 摄像机未恢复）</summary>
     private List<Camera> vnCameras = new List<Camera>();
+    private readonly Dictionary<GameObject, bool> savedGameObjectActiveStates = new Dictionary<GameObject, bool>();
+    private readonly Dictionary<Behaviour, bool> savedBehaviourEnabledStates = new Dictionary<Behaviour, bool>();
+    private Scene previousActiveScene;
+    private bool hasSavedVNUIState;
 
     void Awake()
     {
-        if (Instance != null) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            if (Instance.IsManagedVNSceneLoaded())
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Debug.LogWarning("[SceneLoader] Replacing stale SceneLoader instance");
+            Destroy(Instance.gameObject);
+        }
+
         Instance = this;
 
         // 必须在 DontDestroyOnLoad 之前记录 VN 场景路径
@@ -53,9 +70,28 @@ public class SceneLoader : MonoBehaviour
             if (al != null)
                 al.enabled = false;
         }
+
+        RestoreVNEventSystem();
+        BindUIManagerToVNCanvas();
+        BindUIManagerToVNEventSystem();
     }
 
     /// <summary>缓存当前 VN 场景中的所有 Canvas、EventSystem、AudioListener、Camera 引用</summary>
+    private bool IsManagedVNSceneLoaded()
+    {
+        if (string.IsNullOrEmpty(vnScenePath))
+            return false;
+
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+            if (scene.isLoaded && scene.path == vnScenePath)
+                return true;
+        }
+
+        return false;
+    }
+
     private void CacheVNUIReferences()
     {
         vnCanvases.Clear();
@@ -99,6 +135,7 @@ public class SceneLoader : MonoBehaviour
 
         currentMiniGameScene = sceneName;
         IsMiniGameRunning = true;
+        CaptureVNUIState();
 
         // 强制禁用所有 VN 侧 UI
         DisableVNUI();
@@ -110,6 +147,15 @@ public class SceneLoader : MonoBehaviour
     {
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
         while (!op.isDone) yield return null;
+
+        Scene miniGameScene = SceneManager.GetSceneByName(sceneName);
+        if (miniGameScene.IsValid() && miniGameScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(miniGameScene);
+        }
+
+        yield return null;
+        DisableVNUI();
     }
 
     public void UnloadMiniGame()
@@ -148,21 +194,11 @@ public class SceneLoader : MonoBehaviour
         IsMiniGameRunning = false;
 
         // 清理小游戏残留的 DontDestroyOnLoad BGM 播放器（兜底）
-        var bgmPlayer = GameObject.Find("BGM_Player");
-        if (bgmPlayer != null)
-            Destroy(bgmPlayer);
+        PacScripts.IniPac.StopBGM();
+        CleanupMiniGamePersistentObjects();
 
         // 【Bug修复】如果 VN 场景在小游戏过程中被意外卸载，重新加载
         bool vnSceneLost = !GetVNScene().isLoaded;
-
-        // 【修复】仅当 VN 场景确实丢失时才清理 Jump2Pac 单例
-        // 如果 VN 场景保持加载（Jump2Pac 不再卸载 VNMainMenu），Jump2Pac 仍然有效不应被销毁
-        if (vnSceneLost && PacScripts.Jump2Pac.Instance != null)
-        {
-            var oldJump2Pac = PacScripts.Jump2Pac.Instance;
-            Destroy(oldJump2Pac.gameObject);
-            Debug.Log("[SceneLoader] VN 场景丢失，已清理 DontDestroyOnLoad 中残留的 Jump2Pac");
-        }
 
         if (vnSceneLost && !string.IsNullOrEmpty(vnScenePath))
         {
@@ -191,10 +227,85 @@ public class SceneLoader : MonoBehaviour
 
     // ==================== VN UI 批量控制 ====================
 
+    private void CaptureVNUIState()
+    {
+        CacheVNUIReferences();
+
+        savedGameObjectActiveStates.Clear();
+        savedBehaviourEnabledStates.Clear();
+        previousActiveScene = SceneManager.GetActiveScene();
+        hasSavedVNUIState = true;
+
+        SaveGameObjectState(mainCanvas);
+        SaveGameObjectState(mainEventSystem);
+
+        foreach (var c in vnCanvases)
+        {
+            if (c == null) continue;
+            SaveGameObjectState(c.gameObject);
+            SaveBehaviourState(c);
+        }
+
+        foreach (var es in vnEventSystems)
+        {
+            if (es == null) continue;
+            SaveGameObjectState(es.gameObject);
+            SaveBehaviourState(es);
+            foreach (var module in es.GetComponents<BaseInputModule>())
+                SaveBehaviourState(module);
+        }
+
+        foreach (var al in vnAudioListeners)
+        {
+            if (al == null) continue;
+            SaveBehaviourState(al);
+        }
+    }
+
+    private void SaveGameObjectState(GameObject go)
+    {
+        if (go != null && !savedGameObjectActiveStates.ContainsKey(go))
+            savedGameObjectActiveStates.Add(go, go.activeSelf);
+    }
+
+    private void SaveBehaviourState(Behaviour behaviour)
+    {
+        if (behaviour != null && !savedBehaviourEnabledStates.ContainsKey(behaviour))
+            savedBehaviourEnabledStates.Add(behaviour, behaviour.enabled);
+    }
+
+    private void RestoreVNUIState()
+    {
+        if (!hasSavedVNUIState)
+            return;
+
+        foreach (var pair in savedGameObjectActiveStates)
+        {
+            if (pair.Key != null)
+                pair.Key.SetActive(pair.Value);
+        }
+
+        foreach (var pair in savedBehaviourEnabledStates)
+        {
+            if (pair.Key != null)
+                pair.Key.enabled = pair.Value;
+        }
+
+        savedGameObjectActiveStates.Clear();
+        savedBehaviourEnabledStates.Clear();
+        hasSavedVNUIState = false;
+    }
+
     private void DisableVNUI()
     {
-        if (mainCanvas) mainCanvas.SetActive(false);
-        if (mainEventSystem) mainEventSystem.SetActive(false);
+        if (mainCanvas)
+        {
+            mainCanvas.SetActive(false);
+        }
+        if (mainEventSystem)
+        {
+            mainEventSystem.SetActive(false);
+        }
 
         foreach (var c in vnCanvases)
         {
@@ -262,20 +373,9 @@ public class SceneLoader : MonoBehaviour
         if (mainMenu != null) mainMenu.gameObject.SetActive(false);
 
         // 4. 恢复 VN UI（Canvas 激活会级联激活其子节点的 Camera）
-        if (mainCanvas) mainCanvas.SetActive(true);
-        if (mainEventSystem) mainEventSystem.SetActive(true);
-
-        foreach (var c in vnCanvases)
-        {
-            if (c != null && c.gameObject != mainCanvas)
-                c.gameObject.SetActive(true);
-        }
-
-        foreach (var es in vnEventSystems)
-        {
-            if (es != null && es.gameObject != mainEventSystem)
-                es.gameObject.SetActive(true);
-        }
+        RestoreVNUIState();
+        RestoreVNEventSystem();
+        RestoreVNGameplayVisibility();
 
         // 5. 确保 VN 场景的 Camera 处于渲染状态
         //    VN Camera 进入小游戏时未禁用 enabled（仅 Canvas 被 SetActive），
@@ -285,6 +385,297 @@ public class SceneLoader : MonoBehaviour
         // 6. 启用兜底 AudioListener（DontDestroyOnLoad，保证始终有一个）
         if (fallbackAudioListener != null)
             fallbackAudioListener.enabled = true;
+
+        Scene vnScene = GetVNScene();
+        if (vnScene.IsValid() && vnScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(vnScene);
+        }
+        else if (previousActiveScene.IsValid() && previousActiveScene.isLoaded)
+        {
+            SceneManager.SetActiveScene(previousActiveScene);
+        }
+
+        BindUIManagerToVNCanvas();
+        BindUIManagerToVNEventSystem();
+        UIManager.GetInstance().Init();
+        BindUIManagerToVNEventSystem();
+        RestoreVNGameplayVisibility();
+        ClearResidualTransitionOverlays();
+    }
+
+    private void RestoreVNEventSystem()
+    {
+        EventSystem selected = null;
+
+        foreach (var es in Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (es == null)
+                continue;
+
+            if (!IsVNEventSystem(es))
+            {
+                if (es.gameObject.activeSelf)
+                    es.gameObject.SetActive(false);
+                continue;
+            }
+
+            if (!es.gameObject.activeSelf)
+                es.gameObject.SetActive(true);
+            es.enabled = true;
+
+            foreach (var module in es.GetComponents<BaseInputModule>())
+                module.enabled = true;
+
+            if (es.gameObject.activeInHierarchy && selected == null)
+                selected = es;
+        }
+
+        if (selected != null)
+        {
+            EventSystem.current = selected;
+            selected.SetSelectedGameObject(null);
+            Debug.Log($"[SceneLoader] VN EventSystem selected: {selected.name} ({selected.gameObject.scene.name})");
+        }
+    }
+
+    private void RestoreVNGameplayVisibility()
+    {
+        CacheVNUIReferences();
+
+        foreach (var canvas in vnCanvases)
+        {
+            if (canvas == null)
+                continue;
+
+            bool isGameplayCanvas = canvas.name == "VNGamePlayCanvas" || canvas.gameObject == mainCanvas;
+            if (!isGameplayCanvas)
+                continue;
+
+            canvas.gameObject.SetActive(true);
+            canvas.enabled = true;
+            AssignCanvasCamera(canvas);
+        }
+
+        if (mainCanvas != null)
+        {
+            mainCanvas.SetActive(true);
+            var canvas = mainCanvas.GetComponent<Canvas>();
+            if (canvas != null)
+            {
+                canvas.enabled = true;
+                AssignCanvasCamera(canvas);
+            }
+        }
+
+        foreach (var gameplayPanel in Object.FindObjectsByType<VNGameplayPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (gameplayPanel != null && gameplayPanel.gameObject.scene.path == vnScenePath)
+                gameplayPanel.ShowMe();
+        }
+
+        Canvas.ForceUpdateCanvases();
+    }
+
+    private void AssignCanvasCamera(Canvas canvas)
+    {
+        if (canvas == null || canvas.renderMode != RenderMode.ScreenSpaceCamera)
+            return;
+
+        Camera vnCamera = null;
+        foreach (var cam in vnCameras)
+        {
+            if (cam == null || cam.gameObject.scene.path != vnScenePath)
+                continue;
+
+            vnCamera = cam;
+            break;
+        }
+
+        if (vnCamera == null)
+            vnCamera = Camera.main;
+
+        if (vnCamera != null)
+            canvas.worldCamera = vnCamera;
+    }
+
+    private void BindUIManagerToVNCanvas()
+    {
+        Canvas targetCanvas = null;
+        foreach (var canvas in vnCanvases)
+        {
+            if (canvas == null || canvas.name != "VNGamePlayCanvas")
+                continue;
+
+            targetCanvas = canvas;
+            break;
+        }
+
+        if (targetCanvas == null && mainCanvas != null)
+            targetCanvas = mainCanvas.GetComponent<Canvas>();
+
+        if (targetCanvas == null)
+            return;
+
+        targetCanvas.gameObject.SetActive(true);
+        targetCanvas.enabled = true;
+
+        UIManager uiManager = UIManager.GetInstance();
+        uiManager.canvas = targetCanvas.transform as RectTransform;
+
+        SetUIManagerPrivateField("_canvasGameObject", targetCanvas.gameObject);
+        SetUIManagerPrivateField("_isCanvasDynamicallyCreated", false);
+        Debug.Log($"[SceneLoader] UIManager 已绑定到 VN Canvas: {targetCanvas.name} ({targetCanvas.gameObject.scene.name})");
+    }
+
+    private void BindUIManagerToVNEventSystem()
+    {
+        EventSystem targetEventSystem = null;
+
+        foreach (var eventSystem in Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (eventSystem == null || !IsVNEventSystem(eventSystem))
+                continue;
+
+            targetEventSystem = eventSystem;
+            break;
+        }
+
+        if (targetEventSystem == null)
+            return;
+
+        targetEventSystem.gameObject.SetActive(true);
+        targetEventSystem.enabled = true;
+
+        foreach (var module in targetEventSystem.GetComponents<BaseInputModule>())
+            module.enabled = true;
+
+        foreach (var eventSystem in Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (eventSystem == null || eventSystem == targetEventSystem)
+                continue;
+
+            if (eventSystem.gameObject.activeSelf)
+                eventSystem.gameObject.SetActive(false);
+        }
+
+        EventSystem.current = targetEventSystem;
+        targetEventSystem.SetSelectedGameObject(null);
+        SetUIManagerPrivateField("_eventSystemGameObject", targetEventSystem.gameObject);
+        SetUIManagerPrivateField("_isEventSystemDynamicallyCreated", false);
+
+        Debug.Log($"[SceneLoader] UIManager bound to VN EventSystem: {targetEventSystem.name} ({targetEventSystem.gameObject.scene.name})");
+    }
+
+    private bool IsVNEventSystem(EventSystem eventSystem)
+    {
+        if (eventSystem == null)
+            return false;
+
+        if (eventSystem.gameObject.scene.path == vnScenePath)
+            return true;
+
+        RectTransform uiCanvasTransform = UIManager.GetInstance().canvas;
+        if (uiCanvasTransform == null)
+        {
+            foreach (var canvas in vnCanvases)
+            {
+                if (canvas != null && canvas.name == "VNGamePlayCanvas")
+                {
+                    uiCanvasTransform = canvas.transform as RectTransform;
+                    break;
+                }
+            }
+        }
+
+        if (uiCanvasTransform == null)
+            return false;
+
+        if (eventSystem.transform.IsChildOf(uiCanvasTransform))
+            return true;
+
+        return eventSystem.gameObject.scene == uiCanvasTransform.gameObject.scene &&
+               (eventSystem.name == "EventSystem" || eventSystem.GetComponent<BaseInputModule>() != null);
+    }
+
+    private void SetUIManagerPrivateField(string fieldName, object value)
+    {
+        FieldInfo field = typeof(UIManager).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field != null)
+            field.SetValue(UIManager.GetInstance(), value);
+    }
+
+    private void ClearResidualTransitionOverlays()
+    {
+        int clearedFadeImages = 0;
+        foreach (var image in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (image == null || image.name != "__DarkFadeImage")
+                continue;
+
+            Color color = image.color;
+            color.r = 0f;
+            color.g = 0f;
+            color.b = 0f;
+            color.a = 0f;
+            image.color = color;
+            image.raycastTarget = false;
+
+            var canvas = image.GetComponentInParent<Canvas>(includeInactive: true);
+            if (canvas != null)
+            {
+                canvas.enabled = true;
+                canvas.sortingOrder = -10000;
+            }
+            clearedFadeImages++;
+        }
+
+        int hiddenLoadingPanels = 0;
+        foreach (var loadingPanel in Object.FindObjectsByType<LoadingProgressPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (loadingPanel != null)
+            {
+                loadingPanel.gameObject.SetActive(false);
+                hiddenLoadingPanels++;
+            }
+        }
+
+        Debug.Log($"[SceneLoader] 已清理残留覆盖层: DarkFade={clearedFadeImages}, Loading={hiddenLoadingPanels}");
+    }
+
+    private void CleanupMiniGamePersistentObjects()
+    {
+        if (PacScripts.Jump2Pac.Instance != null)
+        {
+            Destroy(PacScripts.Jump2Pac.Instance.gameObject);
+            Debug.Log("[SceneLoader] 已清理剧情小游戏路径残留的 Jump2Pac");
+        }
+
+        foreach (var canvas in Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (canvas == null || canvas.gameObject.scene.name != "DontDestroyOnLoad")
+                continue;
+
+            if (canvas.name == "VNGamePlayCanvas" ||
+                canvas.name == "__DarkFadeCanvas" ||
+                canvas.GetComponentInChildren<LoadingProgressPanel>(includeInactive: true) != null)
+                continue;
+
+            canvas.gameObject.SetActive(false);
+            Debug.Log($"[SceneLoader] 已隐藏持久化小游戏 Canvas: {canvas.name}");
+        }
+
+        foreach (var camera in Object.FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (camera == null || camera.gameObject.scene.name != "DontDestroyOnLoad")
+                continue;
+
+            if (camera.gameObject.scene.path == vnScenePath)
+                continue;
+
+            camera.enabled = false;
+            Debug.Log($"[SceneLoader] 已禁用持久化小游戏 Camera: {camera.name}");
+        }
     }
 
     /// <summary>
