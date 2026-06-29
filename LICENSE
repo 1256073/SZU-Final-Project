@@ -1,0 +1,39 @@
+Copyright (c) 2026 Project Authors
+
+All rights reserved unless otherwise stated below.
+
+This project is provided for coursework demonstration and learning purposes.
+You may view and study the project for educational purposes, but you may not
+copy, modify, redistribute, sublicense, sell, publish, or use this project or
+any part of it commercially without explicit permission from the project
+authors, except where permitted by the licenses of third-party components.
+
+The following materials are not licensed for reuse under this license:
+
+- character images and character designs;
+- background images and cover images;
+- music, sound effects, and voice clips;
+- UI artwork, icons, sprites, and other visual media;
+- story text, dialogue, scenario files, and narrative content.
+
+These materials remain the property of their respective authors or copyright
+holders. If a third-party asset included in this project has its own license,
+that license continues to apply to that asset.
+
+Third-party components include, but are not limited to:
+
+- Unity and Unity packages, governed by Unity's own terms;
+- VNovelizer, licensed under the MIT License;
+- LitJson, released into the public domain;
+- UIPraticle/UIParticle components, licensed under the MIT License;
+- Kenney Fantasy UI Borders, licensed under Creative Commons Zero (CC0);
+- PrimeTween, governed by its own package license.
+
+Nothing in this license grants permission to remove copyright notices,
+attribution notices, or license files from third-party components.
+
+THE PROJECT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+PROJECT AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+FROM THE USE OF THIS PROJECT.
